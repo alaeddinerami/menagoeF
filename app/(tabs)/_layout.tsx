@@ -1,5 +1,5 @@
 import { Link, Tabs } from 'expo-router';
-
+import Entypo from '@expo/vector-icons/Entypo';
 import { HeaderButton } from '../../components/HeaderButton';
 import { TabBarIcon } from '../../components/TabBarIcon';
 
@@ -8,20 +8,21 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: 'black',
+        headerShown:false,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Home',
+          tabBarIcon: ({ color }) => <Entypo name="home" size={24} color="black" />,
          
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="Profile"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <Entypo name="user" size={24} color="black" />,
         }}
       />
     </Tabs>

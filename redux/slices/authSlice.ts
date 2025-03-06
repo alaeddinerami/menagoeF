@@ -13,6 +13,7 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   error: string | null;
+  token: string | null;
   isAuthenticated: boolean;
 }
 
@@ -20,19 +21,21 @@ const initialState: AuthState = {
   user: null,
   loading: false,
   error: null,
-  isAuthenticated: false, // Default, updated by checkAuth
+  token: null,
+  isAuthenticated: false,
 };
 
-// Thunk to check authentication status
 export const checkAuth = createAsyncThunk(
   "auth/checkAuth",
   async (_, { rejectWithValue }) => {
     try {
-      console.log('checking auth in dlice');
+      // console.log('checking auth in dlice');
       const token = await AsyncStorage.getItem("authToken");
-      console.log(token);
-      if (!token) return null;
-      return { token };     
+      const userString = await AsyncStorage.getItem("user");
+      const user = userString ? JSON.parse(userString) : null
+      // console.log(token);
+      if (!token ) return null;
+      return { token, user};     
     } catch (error: any) {
       await AsyncStorage.removeItem("authToken"); 
       return rejectWithValue("Invalid or expired token");
@@ -40,7 +43,6 @@ export const checkAuth = createAsyncThunk(
   }
 );
 
-// Signup Thunk
 export const signup = createAsyncThunk(
   "auth/signup",
   async (
@@ -66,6 +68,7 @@ export const login = createAsyncThunk(
       const response = await apiClient.post("/auth/login", { email, password });
       const { token, ...userData } = response.data;
       await AsyncStorage.setItem("authToken", token);
+      await AsyncStorage.setItem("user", JSON.stringify(userData));
       return { token, ...userData };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Login failed");
@@ -94,6 +97,8 @@ const authSlice = createSlice({
       .addCase(checkAuth.fulfilled, (state, action: PayloadAction<any>) => {
         state.loading = false;
         state.isAuthenticated = !!action.payload;
+        state.token = action.payload?.token;
+        state.user = action.payload?.user;
         state.error = null;
       })
       .addCase(checkAuth.rejected, (state, action: PayloadAction<any>) => {
