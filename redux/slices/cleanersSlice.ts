@@ -29,7 +29,7 @@ export const fetchCleaners = createAsyncThunk(
   'cleaners/fetchCleaners',
   async (_, { getState, rejectWithValue }) => {
     try {
-      const state = getState() as RootState;
+      const state = getState() as RootState;//
       const token = state.auth.token
     //   console.log('token',token);
       
