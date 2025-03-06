@@ -1,41 +1,72 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../../api/axiosInstance";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_URL = "https://your-api-endpoint.com";
+interface User {
+  id: string;
+  email: string;
+  token: string;
+  name?: string;
+}
 
-// Define the auth state type
 interface AuthState {
-  user: any | null; // Replace 'any' with your user type (e.g., { id: string, email: string })
+  user: User | null;
   loading: boolean;
   error: string | null;
+  isAuthenticated: boolean;
 }
 
 const initialState: AuthState = {
   user: null,
   loading: false,
   error: null,
+  isAuthenticated: false, // Default, updated by checkAuth
 };
 
-// Async thunk for signup
+// Thunk to check authentication status
+export const checkAuth = createAsyncThunk(
+  "auth/checkAuth",
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('checking auth in dlice');
+      const token = await AsyncStorage.getItem("authToken");
+      console.log(token);
+      if (!token) return null;
+      return { token };     
+    } catch (error: any) {
+      await AsyncStorage.removeItem("authToken"); 
+      return rejectWithValue("Invalid or expired token");
+    }
+  }
+);
+
+// Signup Thunk
 export const signup = createAsyncThunk(
   "auth/signup",
-  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+  async (
+    { name, email, password }: { name: string; email: string; password: string },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await axios.post(`${API_URL}/signup`, { email, password });
-      return response.data;
+      const response = await apiClient.post("/auth/signUp", { name, email, password });
+      const { token, ...userData } = response.data;
+      await AsyncStorage.setItem("authToken", token);
+      return { token, ...userData };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Signup failed");
     }
   }
 );
 
-// Async thunk for login
+// Login Thunk
 export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/login`, { email, password });
-      return response.data;
+      const response = await apiClient.post("/auth/login", { email, password });
+      const { token, ...userData } = response.data;
+      await AsyncStorage.setItem("authToken", token);
+      return { token, ...userData };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
@@ -46,23 +77,42 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // Optional: Add synchronous actions if needed (e.g., logout)
     logout(state) {
       state.user = null;
-      state.loading = false;
+      state.isAuthenticated = false;
       state.error = null;
+      AsyncStorage.removeItem("authToken");
     },
   },
   extraReducers: (builder) => {
+    // Check Auth
+    builder
+      .addCase(checkAuth.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkAuth.fulfilled, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.isAuthenticated = !!action.payload;
+        state.error = null;
+      })
+      .addCase(checkAuth.rejected, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = action.payload as string;
+      });
+
     // Signup
     builder
       .addCase(signup.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(signup.fulfilled, (state, action: PayloadAction<any>) => {
+      .addCase(signup.fulfilled, (state, action: PayloadAction<User>) => {
         state.loading = false;
         state.user = action.payload;
+        state.isAuthenticated = true;
         state.error = null;
       })
       .addCase(signup.rejected, (state, action: PayloadAction<any>) => {
@@ -76,9 +126,10 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(login.fulfilled, (state, action: PayloadAction<any>) => {
+      .addCase(login.fulfilled, (state, action: PayloadAction<User>) => {
         state.loading = false;
         state.user = action.payload;
+        state.isAuthenticated = true;
         state.error = null;
       })
       .addCase(login.rejected, (state, action: PayloadAction<any>) => {
@@ -88,8 +139,5 @@ const authSlice = createSlice({
   },
 });
 
-// Export actions (e.g., logout)
 export const { logout } = authSlice.actions;
-
-// Export reducer
 export default authSlice.reducer;

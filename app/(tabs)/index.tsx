@@ -1,22 +1,34 @@
-import { Stack } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { View, Text } from "react-native";
+import { useSelector, useDispatch } from "react-redux";
+import { useRouter } from "expo-router";
+import { AppDispatch, RootState } from "~/redux/store";
+import { logout } from "~/redux/slices/authSlice";
+import CustomButton from "~/components/CustomButton";
 
-import { ScreenContent } from '~/components/ScreenContent';
+export default function HomeScreen() {
+  const { user ,isAuthenticated} = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+// console.log(isAuthenticated);
+  const handleLogout = () => {
+    dispatch(logout());
+    console.log('log');
+    router.push("/(auth)/wapperAuth");
+  };
 
-export default function Home() {
   return (
-    <>
-      <Stack.Screen options={{ title: 'Tab One' }} />
-      <View style={styles.container}>
-        <ScreenContent path="app/(tabs)/index.tsx" title="Tab One" />
-      </View>
-    </>
+    <View className="flex-1 bg-white p-6 justify-center items-center">
+      <Text className="text-2xl font-bold text-blue-700 mb-4">
+        Welcome to Sparkle Clean!
+      </Text>
+      <Text className="text-lg text-gray-600 mb-6">
+        Hello, {user?.email }!
+      </Text>
+      <CustomButton
+        title="Logout"
+        onPress={handleLogout}
+        style="bg-red-500"
+      />
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-  },
-});

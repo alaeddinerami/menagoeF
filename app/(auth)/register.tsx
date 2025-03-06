@@ -1,13 +1,14 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {  useRouter } from "expo-router";
-import { AppDispatch, RootState } from "~/redux/store";
-import { signup } from "~/redux/slices/authSlice";
-import InputField from "~/components/InputField";
-import CustomButton from "~/components/CustomButton";
+import { signup } from "../../redux/slices/authSlice";
+import InputField from "../../components/InputField";
+import CustomButton from "../../components/CustomButton";
+import { Link, useRouter } from "expo-router";
+import { RootState, AppDispatch } from "../../redux/store";
 
-export default function SignupScreen() {
+export default function RegisterScreen() {
+  const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
@@ -20,9 +21,9 @@ export default function SignupScreen() {
       alert("Passwords do not match");
       return;
     }
-    dispatch(signup({ email, password })).then((result) => {
+    dispatch(signup({name, email, password })).then((result) => {
       if (result.meta.requestStatus === "fulfilled") {
-        router.push("/auth/login");
+        router.push("/(tabs)");
       }
     });
   };
@@ -33,6 +34,7 @@ export default function SignupScreen() {
         Create Account
       </Text>
 
+      <InputField placeholder="Name" value={name} onChangeText={setName} />
       <InputField placeholder="Email" value={email} onChangeText={setEmail} />
       <InputField
         placeholder="Password"
@@ -55,13 +57,12 @@ export default function SignupScreen() {
         disabled={loading}
       />
 
-      <TouchableOpacity>
-        <View >
+      <TouchableOpacity
+        onPress={() => router.push("/(auth)/login")}>
           <Text className="text-center text-gray-600 mt-4">
             Already have an account?{" "}
             <Text className="text-blue-600 font-semibold">Login</Text>
           </Text>
-        </View>
       </TouchableOpacity>
     </View>
   );
