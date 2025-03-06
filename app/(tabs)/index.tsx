@@ -1,34 +1,115 @@
-import { View, Text } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import { useRouter } from "expo-router";
-import { AppDispatch, RootState } from "~/redux/store";
-import { logout } from "~/redux/slices/authSlice";
-import CustomButton from "~/components/CustomButton";
+// src/screens/CleanersScreen.tsx
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useEffect } from 'react';
+import { View, Text, FlatList, Image, StyleSheet, Button } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from '~/redux/slices/authSlice';
+import { fetchCleaners } from '~/redux/slices/cleanersSlice';
+import { AppDispatch, RootState } from '~/redux/store';
 
-export default function HomeScreen() {
-  const { user ,isAuthenticated} = useSelector((state: RootState) => state.auth);
+const CleanersScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
-// console.log(isAuthenticated);
+  const { cleaners, loading, error } = useSelector((state: RootState) => state.cleaners);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        dispatch(fetchCleaners());
+      }
+    }, [dispatch, isAuthenticated])
+  );
+
   const handleLogout = () => {
     dispatch(logout());
-    console.log('log');
-    router.push("/(auth)/wapperAuth");
   };
 
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <Text>Please log in to view cleaners.</Text>
+      </View>
+    );
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Error: {error}</Text>
+        <Button title="Retry" onPress={() => dispatch(fetchCleaners())} />
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-1 bg-white p-6 justify-center items-center">
-      <Text className="text-2xl font-bold text-blue-700 mb-4">
-        Welcome to Sparkle Clean!
-      </Text>
-      <Text className="text-lg text-gray-600 mb-6">
-        Hello, {user?.email }!
-      </Text>
-      <CustomButton
-        title="Logout"
-        onPress={handleLogout}
-        style="bg-red-500"
+    <View style={styles.container}>
+      <Text style={styles.header}>Welcome, {user?.user?.name}!</Text>
+      <Button title="Logout" onPress={handleLogout} />
+      <FlatList
+        data={cleaners}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => {
+          const imagePath = `http://192.168.9.91:3000/${item.image}`;
+          // console.log(imagePath);
+
+          return (
+            <View style={styles.cleanerCard}>
+              {item.image ? (
+                <Image
+                  source={{ uri: imagePath }} // Adjust base URL
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text>No Image</Text>
+              )}
+
+              <Text style={styles.text}>Name: {item.name}</Text>
+              <Text style={styles.text}>Email: {item.email}</Text>
+              <Text style={styles.text}>Location: {item.location}</Text>
+              <Text style={styles.text}>Phone: {item.phone}</Text>
+            </View>
+          );
+        }}
       />
     </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#fff',
+  },
+  header: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  cleanerCard: {
+    padding: 10,
+    marginVertical: 8,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  text: {
+    fontSize: 16,
+  },
+});
+
+export default CleanersScreen;
