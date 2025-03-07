@@ -58,7 +58,8 @@ const CleanersScreen = () => {
         data={cleaners}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => {
-          const imagePath = `http://192.168.9.91:3000/${item.image}`;
+          // const imagePath = `http://192.168.9.91:3000/${item.image}`;
+          const imagePath = `${process.env.EXPO_PUBLIC_API_URL}/${item.image}`;
           // console.log(imagePath);
 
           return (
