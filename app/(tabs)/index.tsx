@@ -1,7 +1,8 @@
 // src/screens/CleanersScreen.tsx
 import { useFocusEffect } from '@react-navigation/native';
+import { router } from 'expo-router';
 import React, { useCallback, useEffect } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, Button } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, Button, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '~/redux/slices/authSlice';
 import { fetchCleaners } from '~/redux/slices/cleanersSlice';
@@ -61,7 +62,9 @@ const CleanersScreen = () => {
           // console.log(imagePath);
 
           return (
-            <View style={styles.cleanerCard}>
+            <TouchableOpacity style={styles.cleanerCard}
+            onPress={() => router.push(`/cleanerDetails/${item._id}` as any)}
+            >        
               {item.image ? (
                 <Image
                   source={{ uri: imagePath }} // Adjust base URL
@@ -76,7 +79,7 @@ const CleanersScreen = () => {
               <Text style={styles.text}>Email: {item.email}</Text>
               <Text style={styles.text}>Location: {item.location}</Text>
               <Text style={styles.text}>Phone: {item.phone}</Text>
-            </View>
+            </TouchableOpacity>
           );
         }}
       />
