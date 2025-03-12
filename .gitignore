@@ -1,6 +1,7 @@
 node_modules/
 .expo/
 dist/
+.env
 npm-debug.*
 *.jks
 *.p8
@@ -11,8 +12,6 @@ npm-debug.*
 web-build/
 # expo router
 expo-env.d.ts
-
-
 
 ios
 android

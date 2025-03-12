@@ -103,116 +103,15 @@ export default function TabLayout() {
                   size={22} 
                   color={color}
                 />
+                                                {/* <Entypo name="user" size={24} color={color} /> */}
+
               </Animated.View>
             </View>
           ),
         }}
       />
-
-      {/* <Tabs.Screen
-        name="cleaners"
-        options={{
-          title: "Cleaners",
-          tabBarIcon: ({ color, focused }) => (
-            <View style={styles.iconContainer}>
-              <Animated.View
-                style={[
-                  styles.iconBackground,
-                  {
-                    opacity: tabAnimations[1],
-                    transform: [
-                      {
-                        scale: tabAnimations[1].interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, 1],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              />
-              <Animated.View
-                style={{
-                  transform: [
-                    {
-                      translateY: tabAnimations[1].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, -3], 
-                      }),
-                    },
-                    {
-                      scale: tabAnimations[1].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [1, 1.15], 
-                      }),
-                    },
-                  ],
-                }}
-              >
-                <Ionicons
-                  name={focused ? "people" : "people-outline"}
-                  size={22} 
-                  color={color}
-                />
-              </Animated.View>
-            </View>
-          ),
-        }}
-      />
-
       <Tabs.Screen
-        name="bookings"
-        options={{
-          title: "Bookings",
-          tabBarIcon: ({ color, focused }) => (
-            <View style={styles.iconContainer}>
-              <Animated.View
-                style={[
-                  styles.iconBackground,
-                  {
-                    opacity: tabAnimations[2],
-                    transform: [
-                      {
-                        scale: tabAnimations[2].interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, 1],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              />
-              <Animated.View
-                style={{
-                  transform: [
-                    {
-                      translateY: tabAnimations[2].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, -3], 
-                      }),
-                    },
-                    {
-                      scale: tabAnimations[2].interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [1, 1.15], 
-                      }),
-                    },
-                  ],
-                }}
-              >
-                <Ionicons
-                  name={focused ? "calendar" : "calendar-outline"}
-                  size={22} 
-                  color={color}
-                />
-              </Animated.View>
-            </View>
-          ),
-        }}
-      /> */}
-
-      <Tabs.Screen
-        name="profile"
+        name="Profile"
         options={{
           title: "Profile",
           tabBarIcon: ({ color, focused }) => (
@@ -221,10 +120,10 @@ export default function TabLayout() {
                 style={[
                   styles.iconBackground,
                   {
-                    opacity: tabAnimations[3],
+                    opacity: tabAnimations[0],
                     transform: [
                       {
-                        scale: tabAnimations[3].interpolate({
+                        scale: tabAnimations[0].interpolate({
                           inputRange: [0, 1],
                           outputRange: [0, 1],
                         }),
@@ -237,32 +136,29 @@ export default function TabLayout() {
                 style={{
                   transform: [
                     {
-                      translateY: tabAnimations[3].interpolate({
+                      translateY: tabAnimations[0].interpolate({
                         inputRange: [0, 1],
-                        outputRange: [0, -3],
+                        outputRange: [0, -3], 
                       }),
                     },
                     {
-                      scale: tabAnimations[3].interpolate({
+                      scale: tabAnimations[0].interpolate({
                         inputRange: [0, 1],
-                        outputRange: [1, 1.15],
+                        outputRange: [1, 1.15], 
                       }),
                     },
                   ],
                 }}
               >
-                {/* <Ionicons
-                  name={focused ? "person" : "person-outline"}
-                  size={22} 
-                  color={color}
-                /> */}
-                                <Entypo name="user" size={24} color={color} />
+               
+                                                <Entypo name="user" size={24} color={color} />
 
               </Animated.View>
             </View>
           ),
         }}
       />
+
     </Tabs>
   )
 }
@@ -278,7 +174,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
-    paddingTop: 8, 
+    paddingTop: 3, 
     paddingBottom: 8, 
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.05)",
