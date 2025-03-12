@@ -2,11 +2,15 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import apiClient from "../../api/axiosInstance";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-interface User {
-  id: string;
-  email: string;
-  token: string;
+interface InnerUser {
   name?: string;
+  email: string;
+  id: string; 
+}
+
+interface User {
+  token: string;
+  user: InnerUser;
 }
 
 interface AuthState {
@@ -60,7 +64,6 @@ export const signup = createAsyncThunk(
   }
 );
 
-// Login Thunk
 export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
@@ -88,7 +91,6 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Check Auth
     builder
       .addCase(checkAuth.pending, (state) => {
         state.loading = true;
@@ -108,7 +110,6 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Signup
     builder
       .addCase(signup.pending, (state) => {
         state.loading = true;
@@ -125,7 +126,6 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Login
     builder
       .addCase(login.pending, (state) => {
         state.loading = true;
