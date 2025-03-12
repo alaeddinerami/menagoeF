@@ -3,7 +3,7 @@ import { persistStore, persistReducer } from "redux-persist";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import authReducer, { checkAuth } from "./slices/authSlice";
 import cleanersReducer from "./slices/cleanersSlice";
-
+import reservationsReducer from "./slices/reservationsSlice";
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
@@ -29,6 +29,7 @@ const store = configureStore({
   reducer: {
     auth: persistedReducer,
     cleaners: cleanersReducer,
+    reservations: reservationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
