@@ -296,7 +296,7 @@ const CleanerDetails = () => {
               </View>
               <View className="flex-1">
                 <Text className="text-xs text-gray-500 mb-1">Phone</Text>
-                <Text className="text-base text-gray-800 font-medium">{cleaner.phone}</Text>
+                <Text className="text-ba57575e text-gray-800 font-medium">{cleaner.phone}</Text>
               </View>
             </View>
 
