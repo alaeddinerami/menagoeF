@@ -66,7 +66,6 @@ const CleanerDetails = () => {
     }
   }, [dispatch, id, cleaners.length]);
 
-  // Process availability data from Redux store
   useEffect(() => {
     if (reservations && id) {
       setLoadingSchedule(true);
@@ -85,7 +84,7 @@ const CleanerDetails = () => {
             (res: Reservation) => res.date.split("T")[0] === dateString
           );
 
-          const isAvailable = !isBooked; // Green if not booked, red if booked
+          const isAvailable = !isBooked; 
 
           scheduleData[dateString] = {
             isAvailable,
