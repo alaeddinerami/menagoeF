@@ -6,6 +6,7 @@ import { AppDispatch, RootState } from "~/redux/store";
 import { login } from "~/redux/slices/authSlice";
 import InputField from "~/components/InputField";
 import CustomButton from "~/components/CustomButton";
+import { initializeSocket } from "~/redux/slices/chatSlice";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState<string>("alaeddinerfami98@gmail.com");
@@ -17,6 +18,8 @@ export default function LoginScreen() {
   const handleLogin = () => {
     dispatch(login({ email, password })).then((result) => {
       if (result.meta.requestStatus === "fulfilled") {
+        const token = result.payload.token;
+        dispatch(initializeSocket (token));
         router.push("/(tabs)"); 
       }
     });

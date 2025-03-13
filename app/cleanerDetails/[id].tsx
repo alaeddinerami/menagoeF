@@ -23,11 +23,9 @@ import { fetchAvailability, createReservation } from "~/redux/slices/reservation
 const { width } = Dimensions.get("window");
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-// Types for scheduling
 interface Reservation {
   _id: string;
   date: string;
-  // Assuming cleaner field might be added later; for now, we infer it’s for the current cleaner
 }
 
 interface ScheduleData {
@@ -89,12 +87,12 @@ const CleanerDetails = () => {
           scheduleData[dateString] = {
             isAvailable,
             marked: true,
-            dotColor: isAvailable ? "#4CAF50" : "#F44336", // Green for available, red for booked
+            dotColor: isAvailable ? "#4CAF50" : "#F44336", 
           };
 
           marked[dateString] = {
             marked: true,
-            dotColor: isAvailable ? "#4CAF50" : "#F44336", // Green for available, red for booked
+            dotColor: isAvailable ? "#4CAF50" : "#F44336", 
             selectedColor: "#6366F1",
             customStyles: {
               container: {
@@ -233,8 +231,9 @@ const CleanerDetails = () => {
         </TouchableOpacity>
         <Text className="text-lg font-semibold text-gray-800">Cleaner Profile</Text>
         <View className="flex-row">
-          <TouchableOpacity className="w-10 h-10 rounded-full bg-white/80 justify-center items-center shadow-md">
-            <Ionicons name="heart-outline" size={24} color="#6366F1" />
+          <TouchableOpacity className="w-10 h-10 rounded-full bg-white/80 justify-center items-center shadow-md"
+          onPress={() => router.push(`/chatScreen/chat?receiverId=${cleaner._id}`)}>
+          <Ionicons name="chatbox-ellipses" size={24} color="#6366F1" />
           </TouchableOpacity>
         </View>
       </BlurView>
