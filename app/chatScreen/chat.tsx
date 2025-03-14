@@ -100,12 +100,11 @@ const ChatScreen = () => {
           </View>
         </ScrollView>
 
-        {/* Chat Input */}
         <View style={styles.inputContainer}>
           <View style={styles.textInputContainer}>
             <TouchableOpacity style={styles.inputIcon}>
               <Ionicons name="happy-outline" size={24} color="#8696a0" />
-            </TouchableOpacity>
+              </TouchableOpacity>
 
             <TextInput style={styles.input} placeholder="Message" multiline />
           </View>
@@ -122,12 +121,12 @@ const ChatScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5ff", // Light indigo/lavender background
+    backgroundColor: "#f5f5ff", 
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#6366F1", // Changed to indigo #6366F1
+    backgroundColor: "#6366F1", 
     paddingVertical: 10,
     paddingHorizontal: 16,
     height: 60,

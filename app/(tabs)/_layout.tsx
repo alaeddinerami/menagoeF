@@ -31,6 +31,9 @@ export default function TabLayout() {
     animateTab(0)
   }, [])
 
+
+ 
+
   return (
     <Tabs
       screenOptions={{
