@@ -18,7 +18,7 @@ const ChatScreen = () => {
   const { cleaner } = useLocalSearchParams();
   const cleanerObject = typeof cleaner === "string" ? JSON.parse(decodeURIComponent(cleaner)) : null;
 
-  const senderId = user?.user?._id; 
+  const senderId = user?.user?._id; // sss
   const receiverId = cleanerObject?._id;
 
   useEffect(() => {
