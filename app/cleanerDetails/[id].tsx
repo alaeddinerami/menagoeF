@@ -222,17 +222,20 @@ const CleanerDetails = () => {
   }
 
   const imageUrl = cleaner.image ? `${BASE_URL}/${cleaner.image}` : null;
-
+const sendCleaner = () => {
+  const cleanerData = encodeURIComponent(JSON.stringify(cleaner));
+  router.push(`/chatScreen/chat?cleaner=${cleanerData}`);
+}
   return (
     <View className="flex-1 bg-gray-100">
       <BlurView intensity={80} tint="light" className="flex-row items-center justify-between pt-8 pb-4 px-4 absolute top-0 left-0 right-0 z-10 border-b border-gray-300/30">
         <TouchableOpacity className="w-10 h-10 rounded-full bg-white/80 justify-center items-center shadow-md" onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="#6366F1" />
         </TouchableOpacity>
-        <Text className="text-lg font-semibold text-gray-800">Cleaner Profile</Text>
+        <Text className="text-lg font-semibold text-gray-800">Cleaner Profile {cleaner._id}</Text>
         <View className="flex-row">
           <TouchableOpacity className="w-10 h-10 rounded-full bg-white/80 justify-center items-center shadow-md"
-          onPress={() => router.push(`/chatScreen/chat?receiverId=${cleaner._id}`)}>
+          onPress={sendCleaner}>
           <Ionicons name="chatbox-ellipses" size={24} color="#6366F1" />
           </TouchableOpacity>
         </View>

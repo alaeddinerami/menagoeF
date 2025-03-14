@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 interface InnerUser {
   name?: string;
   email: string;
-  id: string; 
+  _id: string; 
 }
 
 interface User {

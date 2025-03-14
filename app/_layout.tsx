@@ -1,17 +1,21 @@
-import { Provider, useSelector } from "react-redux";
+import { Provider, useSelector, useDispatch } from "react-redux";
 import "../global.css";
 import { Slot } from "expo-router";
 import store, { persistor, RootState } from "~/redux/store";
 import { PersistGate } from "redux-persist/integration/react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useEffect } from "react";
-import { initializeSocket } from "~/utils/socket"; // Import your socket factory function
+import { initializeSocket } from "~/utils/socket";
+import { addMessage, clearMessages } from "~/redux/slices/chatSlice";
 
 export const unstable_settings = {
   initialRouteName: "index",
-}
+};
+
 function AppInitializer() {
-  const { loading, token ,isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const { loading, token, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const userId = useSelector((state: RootState) => state.auth.user?.user?._id);
 
   useEffect(() => {
     let socket: any;
@@ -19,7 +23,6 @@ function AppInitializer() {
     if (token && isAuthenticated) {
       socket = initializeSocket(token);
 
-      // Socket event listeners
       socket.on("connect", () => {
         console.log("WebSocket connected successfully");
       });
@@ -32,11 +35,13 @@ function AppInitializer() {
         console.error("WebSocket connection error:", err.message);
       });
 
-      socket.on("message", (msg: any) => {
+      socket.on("message", (msg: message) => {
         console.log("Received message:", msg);
+        dispatch(addMessage(msg)); 
+        // Add all messages; ChatScreen will filter via fetchChatHistory
       });
 
-      socket.on("chatHistory", (history: any[]) => {
+      socket.on("chatHistory", (history: message[]) => {
         console.log("Received chat history:", history);
       });
 
@@ -44,17 +49,16 @@ function AppInitializer() {
         console.error("Server error:", err.message);
       });
 
-      // Connect the socket
       socket.connect();
     }
 
-    // Cleanup: Disconnect socket when token changes or component unmounts
     return () => {
       if (socket) {
         socket.disconnect();
       }
+      dispatch(clearMessages()); 
     };
-  }, [token,isAuthenticated]); 
+  }, [token, isAuthenticated, dispatch]);
 
   if (loading) {
     return <ActivityIndicator color={"blue"} size={"large"} />;
