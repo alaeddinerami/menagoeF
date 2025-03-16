@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -10,64 +10,26 @@ import {
   StatusBar
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
+import store, { RootState } from '~/redux/store';
+import { fetchUserChats } from '~/redux/slices/chatListSlice';
+import { router } from 'expo-router';
 
-const MOCK_CHATS = [
-  {
-    id: '1',
-    name: 'Sarah Johnson',
-    avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
-    lastMessage: 'Hey, are we still meeting today?',
-    timestamp: '10:30 AM',
-    unread: 2,
-  },
-  {
-    id: '2',
-    name: 'Michael Chen',
-    avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
-    lastMessage: 'I sent you the documents you requested',
-    timestamp: 'Yesterday',
-    unread: 0,
-  },
-  {
-    id: '3',
-    name: 'Team Alpha',
-    avatar: 'https://randomuser.me/api/portraits/women/3.jpg',
-    lastMessage: 'Alex: Let\'s discuss the new project tomorrow',
-    timestamp: 'Yesterday',
-    unread: 5,
-  },
-  {
-    id: '4',
-    name: 'David Wilson',
-    avatar: 'https://randomuser.me/api/portraits/men/4.jpg',
-    lastMessage: 'Thanks for your help!',
-    timestamp: 'Monday',
-    unread: 0,
-  },
-  {
-    id: '5',
-    name: 'Emma Thompson',
-    avatar: 'https://randomuser.me/api/portraits/women/5.jpg',
-    lastMessage: 'Can you send me the presentation?',
-    timestamp: 'Monday',
-    unread: 1,
-  },
-];
-
-// Chat item component
-const ChatItem = ({ chat, onPress }) => {
+const ChatItem = ({ chat, onPress }: { chat: any; onPress: (chat: any) => void }) => {
   return (
     <TouchableOpacity 
       style={styles.chatItem} 
-      onPress={() => onPress(chat)}
       activeOpacity={0.7}
+      onPress={() => onPress(chat)} 
     >
-      <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+      <Image source={{ uri: chat.otherUser.image }} style={styles.avatar} />
       
       <View style={styles.chatContent}>
         <View style={styles.chatHeader}>
-          <Text style={styles.chatName}>{chat.name}</Text>
-          <Text style={styles.timestamp}>{chat.timestamp}</Text>
+          <Text style={styles.chatName}>{chat.otherUser.name}</Text>
+          <Text style={styles.timestamp}>
+            {new Date(chat.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Text>
         </View>
         
         <View style={styles.chatFooter}>
@@ -76,36 +38,64 @@ const ChatItem = ({ chat, onPress }) => {
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {chat.lastMessage}
+            {chat.lastMessage || 'No messages yet'}
           </Text>
-          
-          {chat.unread > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadText}>{chat.unread}</Text>
-            </View>
-          )}
         </View>
       </View>
     </TouchableOpacity>
   );
 };
 
-// Main chat list screen
 const ChatListScreen = () => {
   const navigation = useNavigation();
-  const [chats, setChats] = useState(MOCK_CHATS);
+  const dispatch = useDispatch<typeof store.dispatch>();
+  const { chats, loading, error } = useSelector((state: RootState) => state.chatList);
+  const { user } = useSelector((state: RootState) => state.auth); // Get current user from auth state
+  const userId = user?.user?._id || 'your-user-id-here'; // Use actual user ID from auth
 
-  const handleChatPress = (chat) => {
-    // Navigate to chat detail screen
-    navigation.navigate('ChatDetail', { chatId: chat.id, name: chat.name });
+  useEffect(() => {
+    if (userId) {
+      dispatch(fetchUserChats(userId));
+    }
+  }, [dispatch, userId]);
+
+  const handleChatPress = (chat: any) => {
+    console.log('Navigating to chat with:', { 
+      chatId: chat.chatId, 
+      otherUser: chat.otherUser 
+    });
     
-    // Mark as read when navigating to chat
-    setChats(prevChats => 
-      prevChats.map(c => 
-        c.id === chat.id ? { ...c, unread: 0 } : c
-      )
-    );
+    // Pass the otherUser object as "cleaner" in a format your ChatScreen expects
+    const cleanerData = encodeURIComponent(JSON.stringify({
+      _id: chat.otherUser.id,
+      name: chat.otherUser.name,
+      image: chat.otherUser.image,
+    }));
+
+    router.push({
+      pathname: '/chatScreen/chat',
+      params: { 
+        cleaner: cleanerData,
+        chatId: chat.chatId, // Optional, if you need it
+      },
+    });
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.loadingText}>Loading chats...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -113,14 +103,11 @@ const ChatListScreen = () => {
       
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chats</Text>
-        <TouchableOpacity style={styles.newChatButton}>
-          <Text style={styles.newChatButtonText}>New Chat</Text>
-        </TouchableOpacity>
       </View>
       
       <FlatList
         data={chats}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.chatId}
         renderItem={({ item }) => (
           <ChatItem chat={item} onPress={handleChatPress} />
         )}
@@ -150,17 +137,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#212529',
-  },
-  newChatButton: {
-    backgroundColor: '#4361EE',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  newChatButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
   },
   listContent: {
     paddingVertical: 8,
@@ -214,18 +190,19 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
-  unreadBadge: {
-    backgroundColor: '#4361EE',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+  loadingText: {
+    flex: 1,
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#212529',
   },
-  unreadText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
+  errorText: {
+    flex: 1,
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#DC3545',
   },
 });
 

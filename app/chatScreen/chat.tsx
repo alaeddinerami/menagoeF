@@ -3,42 +3,56 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "~/redux/store";
-import { useState, useEffect } from "react"; // Added useEffect for logging
-import { fetchChatHistory, sendChatMessage } from "~/redux/slices/chatSlice";
+import store, { RootState } from "~/redux/store";
+import { useState, useEffect, useRef } from "react";
+import { addMessage, fetchChatHistory, sendChatMessage } from "~/redux/slices/chatSlice";
+import { getSocket } from "~/utils/socket";
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const ChatScreen = () => {
-  const dispatch = useDispatch();
-  const { messages, loading } = useSelector((state: RootState) => state.chat);
+  const dispatch = useDispatch<typeof store.dispatch>();
+  const { messages } = useSelector((state: RootState) => state.chat); // No loading needed
   const { token, user } = useSelector((state: RootState) => state.auth);
   const [messageText, setMessageText] = useState("");
+  const scrollViewRef = useRef<ScrollView>(null); // Ref for ScrollView
 
   const { cleaner } = useLocalSearchParams();
   const cleanerObject = typeof cleaner === "string" ? JSON.parse(decodeURIComponent(cleaner)) : null;
 
-  const senderId = user?.user?._id; // sss
+  const senderId = user?.user?._id;
   const receiverId = cleanerObject?._id;
-
   useEffect(() => {
     if (senderId && receiverId) {
       dispatch(fetchChatHistory({ userId: senderId, otherUserId: receiverId }));
     }
   }, [senderId, receiverId, dispatch]);
-
-  useEffect(() => {
-    console.log("senderId:", senderId);
-    console.log("receiverId:", receiverId);
-  }, [senderId, receiverId]);
-
+  
   // Handle sending the message
   const handleSendMessage = () => {
-    if (messageText.trim() && senderId && receiverId) {
-      dispatch(sendChatMessage({ senderId, receiverId, content: messageText }));
+    const socket = getSocket();
+    if (messageText.trim() && senderId && receiverId && socket) {
+      // Send message via Socket.IO
+      socket.emit("send_message", {
+        message: messageText,
+        receiverId: receiverId,
+      });
+
+      // Dispatch to Redux for local state update (optional, if socket doesn't handle it)
+      // dispatch(sendChatMessage({ senderId, receiverId, content: messageText }));
+       dispatch(addMessage({message :messageText, senderId}));
       setMessageText(""); // Clear input after sending
+    } else {
+      console.log("Socket not available or invalid data");
     }
   };
+
+  // Scroll to bottom when messages change or new message is sent
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
 
   const imageUrl = cleanerObject?.image
     ? `${BASE_URL}/${cleanerObject.image}`
@@ -69,13 +83,15 @@ const ChatScreen = () => {
       </View>
 
       <View style={styles.chatContainer}>
-        <ScrollView contentContainerStyle={styles.messagesList}>
-          {loading ? (
-            <Text>Loading messages...</Text>
-          ) : messages.length > 0 ? (
-            messages.map((msg) => (
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.messagesList}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+        >
+          {messages.length > 0 ? (
+            messages.map((msg, index) => (
               <View
-                key={msg._id}
+                key={index} // Consider using msg._id if available
                 style={msg.senderId === senderId ? styles.sentContainer : styles.receivedContainer}
               >
                 <View style={msg.senderId === senderId ? styles.sentBubble : styles.receivedBubble}>
@@ -182,6 +198,7 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     padding: 16,
+    paddingBottom: 20, // Add padding to avoid overlap with input
   },
   receivedContainer: {
     alignSelf: "flex-start",

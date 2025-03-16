@@ -12,7 +12,7 @@ enum UserRole {
   CLEANER = 'cleaner',
 }
 export default function LoginScreen() {
-  const [email, setEmail] = useState<string>('alaeddinerfami98@gmail.com');
+  const [email, setEmail] = useState<string>('cleaner@gmail.com');
   const [password, setPassword] = useState<string>('12345678');
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error, user } = useSelector((state: RootState) => state.auth);
@@ -40,8 +40,9 @@ export default function LoginScreen() {
             console.log('ana ghadi l chat');
             router.push("/(cleaner)/ChatItem");
             break;
-          default:            console.log(`Unknown role: ${primaryRole}`);
-            router.push("/(tabs)"); // Fallback for unrecognized roles
+          default:     
+           console.log(`Unknown role: ${primaryRole}`);
+            router.push("/(tabs)"); 
             break;
         }
       } else {

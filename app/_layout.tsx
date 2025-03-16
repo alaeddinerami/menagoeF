@@ -4,9 +4,14 @@ import { Slot } from "expo-router";
 import store, { persistor, RootState } from "~/redux/store";
 import { PersistGate } from "redux-persist/integration/react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { useEffect } from "react";
-import { initializeSocket } from "~/utils/socket";
+import { useEffect, useRef } from "react";
+import { initializeSocket, getSocket } from "~/utils/socket";
 import { addMessage, clearMessages } from "~/redux/slices/chatSlice";
+
+export interface NewMsg {
+  message: string;
+  senderId: string;
+}
 
 export const unstable_settings = {
   initialRouteName: "index",
@@ -16,12 +21,27 @@ function AppInitializer() {
   const dispatch = useDispatch();
   const { loading, token, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const userId = useSelector((state: RootState) => state.auth.user?.user?._id);
+  const socketRef = useRef<any>(null); // Use ref to persist socket instance
 
   useEffect(() => {
-    let socket: any;
+    if (token && isAuthenticated && userId) {
+      const socket = initializeSocket(token);
+      socketRef.current = socket;
 
-    if (token && isAuthenticated) {
-      socket = initializeSocket(token);
+      // Ensure socket is connected
+      if (!socket.connected) {
+        socket.connect();
+      }
+
+      // Define event handler
+      const handleMessageReceived = (newMsg: NewMsg) => {
+        console.log("Received message:", newMsg);
+        dispatch(addMessage(newMsg));
+      };
+
+      // Clean up previous listeners and add new one
+      socket.off(`message_received-${userId}`); // Remove any existing listener
+      socket.on(`message_received-${userId}`, handleMessageReceived);
 
       socket.on("connect", () => {
         console.log("WebSocket connected successfully");
@@ -35,13 +55,7 @@ function AppInitializer() {
         console.error("WebSocket connection error:", err.message);
       });
 
-      socket.on("message", (msg: message) => {
-        console.log("Received message:", msg);
-        dispatch(addMessage(msg)); 
-        // Add all messages; ChatScreen will filter via fetchChatHistory
-      });
-
-      socket.on("chatHistory", (history: message[]) => {
+      socket.on("chatHistory", (history: any[]) => {
         console.log("Received chat history:", history);
       });
 
@@ -49,16 +63,16 @@ function AppInitializer() {
         console.error("Server error:", err.message);
       });
 
-      socket.connect();
+      // Cleanup function
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.off(`message_received-${userId}`, handleMessageReceived); // Remove specific listener
+          socketRef.current.disconnect();
+        }
+        dispatch(clearMessages());
+      };
     }
-
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-      dispatch(clearMessages()); 
-    };
-  }, [token, isAuthenticated, dispatch]);
+  }, [token, isAuthenticated, userId, dispatch]); // Include userId in dependencies
 
   if (loading) {
     return <ActivityIndicator color={"blue"} size={"large"} />;
