@@ -9,13 +9,25 @@ import { useEffect } from "react";
 
 export default function IndexScreen() {
   const router = useRouter();
-  const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
-
+  const { loading, user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+const userRole = user?.user?.roles[0] || 'client';
+  // console.log(user)
+  // console.log(userRole)
 
   if(loading) {
     return null
   }
 
-  return isAuthenticated ? <Redirect href="/(tabs)" /> : <Redirect href="/(auth)/wapperAuth" />;
+  if (isAuthenticated) {
+    if (userRole === "cleaner") {
+      return <Redirect href="/(cleaners)" />;
+    } else if (userRole === "client") {
+      return <Redirect href="/(tabs)" />;
+    } else {
+      console.log("Unknown role, defaulting to (tabs)");
+      return <Redirect href="/(tabs)" />;
+    }
+  }
 
+  return <Redirect href="/(auth)/wapperAuth" />;
 }
