@@ -31,23 +31,23 @@ export default function LoginScreen() {
       if ( primaryRole) {
         switch (primaryRole) {
           case UserRole.CLIENT:
-            router.push("/(tabs)");
+            router.replace("/(tabs)");
             break;
           // case UserRole.ADMIN:
-          //   router.push("/(tabs)/admin-dashboard");
+          //   router.replace("/(tabs)/admin-dashboard");
           //   break;
           case UserRole.CLEANER:
             console.log('ana ghadi l chat');
-            router.push("/(cleaner)/ChatItem");
+            router.replace('/(cleaners)');
             break;
           default:     
            console.log(`Unknown role: ${primaryRole}`);
-            router.push("/(tabs)"); 
+            router.replace("/(tabs)"); 
             break;
         }
       } else {
         // Fallback if no roles or not authenticated
-        router.push("/(tabs)");
+        router.replace("/(tabs)");
       }
     } catch (error) {
       console.log('Login error:', error);
