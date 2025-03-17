@@ -21,7 +21,7 @@ function AppInitializer() {
   const dispatch = useDispatch();
   const { loading, token, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const userId = useSelector((state: RootState) => state.auth.user?.user?._id);
-  const socketRef = useRef<any>(null); // Use ref to persist socket instance
+  const socketRef = useRef<any>(null); 
 
   useEffect(() => {
     if (token && isAuthenticated && userId) {
@@ -40,7 +40,7 @@ function AppInitializer() {
       };
 
       // Clean up previous listeners and add new one
-      socket.off(`message_received-${userId}`); // Remove any existing listener
+      socket.off(`message_received-${userId}`); 
       socket.on(`message_received-${userId}`, handleMessageReceived);
 
       socket.on("connect", () => {
@@ -63,7 +63,6 @@ function AppInitializer() {
         console.error("Server error:", err.message);
       });
 
-      // Cleanup function
       return () => {
         if (socketRef.current) {
           socketRef.current.off(`message_received-${userId}`, handleMessageReceived); // Remove specific listener
@@ -72,7 +71,7 @@ function AppInitializer() {
         dispatch(clearMessages());
       };
     }
-  }, [token, isAuthenticated, userId, dispatch]); // Include userId in dependencies
+  }, [token, isAuthenticated, userId, dispatch]); 
 
   if (loading) {
     return <ActivityIndicator color={"blue"} size={"large"} />;
