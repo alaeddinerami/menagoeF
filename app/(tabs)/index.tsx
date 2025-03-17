@@ -1,4 +1,3 @@
-"use client"
 import { useFocusEffect } from "@react-navigation/native"
 import { router } from "expo-router"
 import { useCallback, useState } from "react"
@@ -35,7 +34,6 @@ const CleanersScreen = () => {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeFilter, setActiveFilter] = useState<FilterOption>("all")
 
-  // For demo purposes, we'll randomly assign availability to cleaners
   const getAvailability = (id: string) => {
     // This is just for demo - in a real app, you'd get this from your API
     return id.charCodeAt(0) % 2 === 0
@@ -62,7 +60,6 @@ const CleanersScreen = () => {
   }
 
   const handleMessageCleaner = (cleanerId: string, cleanerName: string) => {
-    // In a real app, this would navigate to a chat screen
     Alert.alert("Message Cleaner", `You'll be able to message ${cleanerName} here.`, [{ text: "OK" }])
   }
 

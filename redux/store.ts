@@ -4,6 +4,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import authReducer, { checkAuth } from "./slices/authSlice";
 import cleanersReducer from "./slices/cleanersSlice";
 import reservationsReducer from "./slices/reservationsSlice";
+import chatReducer from "./slices/chatSlice";
+import chatListReducer from "./slices/chatListSlice";
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
@@ -30,11 +32,14 @@ const store = configureStore({
     auth: persistedReducer,
     cleaners: cleanersReducer,
     reservations: reservationsReducer,
+    chat: chatReducer,
+    chatList: chatListReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
+        ignoredPaths: ["chat.socket"],
       },
     }),
 });
