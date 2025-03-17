@@ -6,6 +6,9 @@ interface InnerUser {
   name?: string;
   email: string;
   _id: string; 
+  roles: string[];
+  location: string;
+  phone: string;
 }
 
 interface User {
