@@ -13,6 +13,7 @@ import {
   TextInput,
   Alert,
   StatusBar,
+  Dimensions,
 } from "react-native"
 import { useDispatch, useSelector } from "react-redux"
 import { logout } from "~/redux/slices/authSlice"
@@ -20,9 +21,11 @@ import { fetchCleaners } from "~/redux/slices/cleanersSlice"
 import type { AppDispatch, RootState } from "~/redux/store"
 import { Ionicons } from "@expo/vector-icons"
 import { SafeAreaView } from "react-native-safe-area-context"
+import { LinearGradient } from "expo-linear-gradient"
 
-// Define filter options
 type FilterOption = "all" | "available" | "unavailable"
+
+const { width } = Dimensions.get("window")
 
 const CleanersScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -52,21 +55,18 @@ const CleanersScreen = () => {
     dispatch(fetchCleaners()).finally(() => setRefreshing(false))
   }, [dispatch])
 
-  const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Logout", onPress: () => dispatch(logout()), style: "destructive" },
-    ])
+ 
+
+  const handleChats = () => {
+  
+    router.push("/chatScreen/ChatItem")
   }
 
-  const handleMessageCleaner = (cleanerId: string, cleanerName: string) => {
-    Alert.alert("Message Cleaner", `You'll be able to message ${cleanerName} here.`, [{ text: "OK" }])
-  }
+ 
 
   const filterCleaners = () => {
     let filteredList = [...cleaners]
 
-    // Apply search filter
     if (searchQuery) {
       filteredList = filteredList.filter(
         (cleaner) =>
@@ -75,7 +75,6 @@ const CleanersScreen = () => {
       )
     }
 
-    // Apply availability filter
     if (activeFilter !== "all") {
       filteredList = filteredList.filter((cleaner) => {
         const isAvailable = getAvailability(cleaner._id)
@@ -89,31 +88,31 @@ const CleanersScreen = () => {
   if (!isAuthenticated) {
     return (
       <View style={styles.authContainer}>
-        <Ionicons name="lock-closed" size={64} color="#6366F1" />
-        <Text style={styles.authText}>Please log in to view cleaners.</Text>
-        <TouchableOpacity style={styles.authButton} onPress={() => router.push("/login")}>
-          <Text style={styles.authButtonText}>Go to Login</Text>
-        </TouchableOpacity>
+        <LinearGradient colors={["#6366F1", "#8B5CF6"]} style={styles.authGradient}>
+          <Ionicons name="lock-closed" size={64} color="#fff" />
+          <Text style={styles.authText}>Please log in to view cleaners.</Text>
+          <TouchableOpacity style={styles.authButton} onPress={() => router.push("/login")}>
+            <Text style={styles.authButtonText}>Go to Login</Text>
+          </TouchableOpacity>
+        </LinearGradient>
       </View>
     )
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <StatusBar barStyle="light-content" backgroundColor="#6366F1" />
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
+        <LinearGradient colors={["#6366F1", "#8B5CF6"]} style={styles.header}>
           <View>
             <Text style={styles.welcomeText}>Welcome,</Text>
             <Text style={styles.userName}>{user?.user?.name || "User"}</Text>
           </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#6366F1" />
+          <TouchableOpacity style={styles.chatButton} onPress={handleChats}>
+            <Ionicons name="chatbubbles" size={24} color="#fff" />
           </TouchableOpacity>
-        </View>
+        </LinearGradient>
 
-        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#a0aec0" style={styles.searchIcon} />
           <TextInput
@@ -130,7 +129,6 @@ const CleanersScreen = () => {
           ) : null}
         </View>
 
-        {/* Filter Options */}
         <View style={styles.filterContainer}>
           <Text style={styles.filterLabel}>Filter by:</Text>
           <View style={styles.filterOptions}>
@@ -163,7 +161,6 @@ const CleanersScreen = () => {
           </View>
         </View>
 
-        {/* Cleaners List */}
         {loading && !refreshing ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#6366F1" />
@@ -215,20 +212,7 @@ const CleanersScreen = () => {
                           <Ionicons name="person" size={40} color="#CBD5E0" />
                         </View>
                       )}
-                      <View
-                        style={[
-                          styles.availabilityBadge,
-                          isAvailable ? styles.availableBadge : styles.unavailableBadge,
-                        ]}
-                      >
-                        <Text
-                          style={[styles.availabilityText, isAvailable ? styles.availableText : styles.unavailableText]}
-                        >
-                          {isAvailable ? "Available" : "Unavailable"}
-                        </Text>
-                      </View>
                     </View>
-
                     <View style={styles.cleanerInfo}>
                       <Text style={styles.cleanerName}>{item.name}</Text>
 
@@ -247,23 +231,7 @@ const CleanersScreen = () => {
                         <Text style={styles.infoText}>{item.phone}</Text>
                       </View>
 
-                      <View style={styles.cardActions}>
-                        <TouchableOpacity
-                          style={styles.actionButton}
-                          onPress={() => router.push(`/cleanerDetails/${item._id}` as any)}
-                        >
-                          <Ionicons name="calendar" size={18} color="#6366F1" />
-                          <Text style={styles.actionButtonText}>Book</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={styles.actionButton}
-                          onPress={() => handleMessageCleaner(item._id, item.name)}
-                        >
-                          <Ionicons name="chatbubble" size={18} color="#6366F1" />
-                          <Text style={styles.actionButtonText}>Message</Text>
-                        </TouchableOpacity>
-                      </View>
+                     
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -279,7 +247,7 @@ const CleanersScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#6366F1",
   },
   container: {
     flex: 1,
@@ -289,59 +257,56 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   welcomeText: {
     fontSize: 14,
-    color: "#718096",
+    color: "rgba(255, 255, 255, 0.8)",
   },
   userName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#2d3748",
+    color: "#fff",
   },
-  logoutButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "#f7fafc",
+  chatButton: {
+    padding: 10,
+    borderRadius: 50,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 16,
-    marginTop: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    marginHorizontal: 20,
+    marginTop: -10,
     borderRadius: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   searchIcon: {
     marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
     color: "#4a5568",
-    paddingVertical: 0, // Fixes height issues on Android
   },
   filterContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   filterLabel: {
     fontSize: 16,
     fontWeight: "600",
     color: "#4a5568",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   filterOptions: {
     flexDirection: "row",
@@ -351,7 +316,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: "#f7fafc",
-    marginRight: 8,
+    marginRight: 10,
     borderWidth: 1,
     borderColor: "#e2e8f0",
   },
@@ -361,24 +326,25 @@ const styles = StyleSheet.create({
   },
   filterOptionText: {
     fontSize: 14,
+    fontWeight: "500",
     color: "#4a5568",
   },
   activeFilterOptionText: {
     color: "#fff",
   },
   listContainer: {
-    padding: 16,
+    padding: 20,
     paddingTop: 8,
   },
   cleanerCard: {
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
     overflow: "hidden",
   },
   cardContent: {
@@ -392,30 +358,35 @@ const styles = StyleSheet.create({
   image: {
     width: 100,
     height: 100,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   noImageContainer: {
     width: 100,
     height: 100,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: "#f7fafc",
     justifyContent: "center",
     alignItems: "center",
   },
   availabilityBadge: {
     position: "absolute",
-    bottom: -6,
+    bottom: -8,
     left: 0,
     right: 0,
     paddingVertical: 4,
     alignItems: "center",
-    borderRadius: 4,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   availableBadge: {
-    backgroundColor: "rgba(72, 187, 120, 0.9)",
+    backgroundColor: "rgba(72, 187, 120, 0.95)",
   },
   unavailableBadge: {
-    backgroundColor: "rgba(245, 101, 101, 0.9)",
+    backgroundColor: "rgba(245, 101, 101, 0.95)",
   },
   availabilityText: {
     fontSize: 12,
@@ -446,24 +417,39 @@ const styles = StyleSheet.create({
     color: "#4a5568",
     marginLeft: 6,
   },
-  cardActions: {
-    flexDirection: "row",
-    marginTop: 12,
-  },
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#EBF4FF",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginRight: 8,
+    backgroundColor: "#6366F1",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginRight: 10,
+    shadowColor: "#6366F1",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  messageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#8B5CF6",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginRight: 10,
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
   },
   actionButtonText: {
     fontSize: 14,
-    color: "#6366F1",
+    color: "#fff",
     fontWeight: "500",
-    marginLeft: 4,
+    marginLeft: 6,
   },
   loadingContainer: {
     flex: 1,
@@ -517,14 +503,17 @@ const styles = StyleSheet.create({
   },
   authContainer: {
     flex: 1,
+    backgroundColor: "#f7fafc",
+  },
+  authGradient: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-    backgroundColor: "#f7fafc",
   },
   authText: {
     fontSize: 18,
-    color: "#4a5568",
+    color: "#fff",
     textAlign: "center",
     marginTop: 16,
     marginBottom: 24,
@@ -532,8 +521,10 @@ const styles = StyleSheet.create({
   authButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: "#6366F1",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.4)",
   },
   authButtonText: {
     color: "#fff",
@@ -543,4 +534,3 @@ const styles = StyleSheet.create({
 })
 
 export default CleanersScreen
-
