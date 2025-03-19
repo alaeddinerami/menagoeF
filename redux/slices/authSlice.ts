@@ -52,15 +52,17 @@ export const checkAuth = createAsyncThunk(
 
 export const signup = createAsyncThunk(
   "auth/signup",
-  async (
-    { name, email, password }: { name: string; email: string; password: string },
-    { rejectWithValue }
-  ) => {
+  async (formData: FormData, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post("/auth/signUp", { name, email, password });
-      const { token, ...userData } = response.data;
+      const response = await apiClient.post("/auth/signUp", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      const { token, user } = response.data;
       await AsyncStorage.setItem("authToken", token);
-      return { token, ...userData };
+      await AsyncStorage.setItem("user", JSON.stringify({ user }));
+      return { token, user };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Signup failed");
     }
