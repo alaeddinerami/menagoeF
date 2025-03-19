@@ -77,7 +77,6 @@ const CleanerDetails = () => {
           date.setDate(today.getDate() + i);
           const dateString = date.toISOString().split("T")[0];
 
-          // Check if this date is booked based on the API response
           const isBooked = reservations.some(
             (res: Reservation) => res.date.split("T")[0] === dateString
           );
