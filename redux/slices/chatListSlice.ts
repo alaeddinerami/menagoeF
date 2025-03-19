@@ -16,21 +16,18 @@ export interface Chat {
   updatedAt: string | Date;
 }
 
-// Define the ChatListState type
 interface ChatListState {
   chats: Chat[];
   loading: boolean;
   error: string | null;
 }
 
-// Initial state
 const initialState: ChatListState = {
   chats: [],
   loading: false,
   error: null,
 };
 
-// Async thunk to fetch user's chat list
 export const fetchUserChats = createAsyncThunk(
   "chatList/fetchUserChats",
   async (userId: string, { getState, rejectWithValue }) => {
@@ -49,7 +46,7 @@ export const fetchUserChats = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log('chat',response.data);
+      // console.log('chat',response.data);
       
       return response.data;
     } catch (error: any) {
@@ -66,7 +63,6 @@ const chatListSlice = createSlice({
   reducers: {
     addChat(state, action: PayloadAction<Chat>) {
       state.chats.push(action.payload);
-      // Sort chats by updatedAt descending
       state.chats.sort(
         (a, b) =>
           new Date(b.updatedAt ?? 0).getTime() -
