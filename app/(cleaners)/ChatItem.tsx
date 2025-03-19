@@ -16,13 +16,16 @@ import { fetchUserChats } from '~/redux/slices/chatListSlice';
 import { router } from 'expo-router';
 
 const ChatItem = ({ chat, onPress }: { chat: any; onPress: (chat: any) => void }) => {
+  const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+  const imageclient = chat.otherUser.image || null; 
+    const imageUrl = imageclient ? `${BASE_URL}/${imageclient}` : 'https://avatar.iran.liara.run/public';
   return (
     <TouchableOpacity 
       style={styles.chatItem} 
       activeOpacity={0.7}
       onPress={() => onPress(chat)} 
     >
-      <Image source={{ uri: chat.otherUser.image }} style={styles.avatar} />
+      <Image source={{ uri: imageUrl }} style={styles.avatar} />
       
       <View style={styles.chatContent}>
         <View style={styles.chatHeader}>
