@@ -15,7 +15,7 @@ const ChatScreen = () => {
   const { messages } = useSelector((state: RootState) => state.chat); // No loading needed
   const { token, user } = useSelector((state: RootState) => state.auth);
   const [messageText, setMessageText] = useState("");
-  const scrollViewRef = useRef<ScrollView>(null); // Ref for ScrollView
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const { cleaner } = useLocalSearchParams();
   const cleanerObject = typeof cleaner === "string" ? JSON.parse(decodeURIComponent(cleaner)) : null;
@@ -32,7 +32,6 @@ const ChatScreen = () => {
   const handleSendMessage = () => {
     const socket = getSocket();
     if (messageText.trim() && senderId && receiverId && socket) {
-      // Send message via Socket.IO
       socket.emit("send_message", {
         message: messageText,
         receiverId: receiverId,
