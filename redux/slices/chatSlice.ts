@@ -3,23 +3,20 @@ import apiClient from "../../api/axiosInstance"; // Your Axios instance
 import { RootState } from "../store";
 import { NewMsg } from "~/app/_layout";
 
-// Define the Message type based on your Message entity
 export interface Message {
-  _id?: string; // MongoDB ID
+  _id?: string;
   senderId: string;
   content: string;
   isRead: boolean;
-  timestamp: string | Date; // Can be Date or ISO string
+  timestamp: string | Date; 
 }
 
-// Define the ChatState type
 interface ChatState {
   messages: Message[];
   loading: boolean;
   error: string | null;
 }
 
-// Initial state
 const initialState: ChatState = {
   messages: [],
   loading: false,
@@ -52,7 +49,6 @@ export const fetchChatHistory = createAsyncThunk(
   }
 );
 
-// Async thunk to send a message (POST /chat/message)
 export const sendChatMessage = createAsyncThunk(
   "chat/sendChatMessage",
   async (
@@ -85,7 +81,6 @@ export const sendChatMessage = createAsyncThunk(
   }
 );
 
-// Async thunk to mark a message as read (PATCH /chat/message/:messageId/read)
 export const markChatMessageAsRead = createAsyncThunk(
   "chat/markChatMessageAsRead",
   async (messageId: string, { getState, rejectWithValue }) => {
@@ -113,7 +108,6 @@ export const markChatMessageAsRead = createAsyncThunk(
   }
 );
 
-// Create the chat slice
 const chatSlice = createSlice({
   name: "chat",
   initialState,
@@ -134,7 +128,6 @@ const chatSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Fetch Chat History
     builder
       .addCase(fetchChatHistory.pending, (state) => {
         state.loading = true;
@@ -149,7 +142,6 @@ const chatSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Send Message
     builder
       .addCase(sendChatMessage.pending, (state) => {
         state.loading = true;
@@ -157,14 +149,13 @@ const chatSlice = createSlice({
       })
       .addCase(sendChatMessage.fulfilled, (state, action) => {
         state.loading = false;
-        state.messages.push(action.payload); // Add the new message to the state
+        state.messages.push(action.payload);
       })
       .addCase(sendChatMessage.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
 
-    // Mark Message as Read
     builder
       .addCase(markChatMessageAsRead.pending, (state) => {
         state.loading = true;
@@ -175,7 +166,7 @@ const chatSlice = createSlice({
         const updatedMessage = action.payload;
         const index = state.messages.findIndex((msg) => msg._id === updatedMessage._id);
         if (index !== -1) {
-          state.messages[index] = updatedMessage; // Update the message in the state
+          state.messages[index] = updatedMessage; 
         }
       })
       .addCase(markChatMessageAsRead.rejected, (state, action) => {
@@ -185,8 +176,6 @@ const chatSlice = createSlice({
   },
 });
 
-// Export actions
 export const { addMessage, clearMessages } = chatSlice.actions;
 
-// Export reducer
 export default chatSlice.reducer;
