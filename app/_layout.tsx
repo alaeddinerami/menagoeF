@@ -28,18 +28,15 @@ function AppInitializer() {
       const socket = initializeSocket(token);
       socketRef.current = socket;
 
-      // Ensure socket is connected
       if (!socket.connected) {
         socket.connect();
       }
 
-      // Define event handler
       const handleMessageReceived = (newMsg: NewMsg) => {
         console.log("Received message:", newMsg);
         dispatch(addMessage(newMsg));
       };
 
-      // Clean up previous listeners and add new one
       socket.off(`message_received-${userId}`); 
       socket.on(`message_received-${userId}`, handleMessageReceived);
 
@@ -65,7 +62,7 @@ function AppInitializer() {
 
       return () => {
         if (socketRef.current) {
-          socketRef.current.off(`message_received-${userId}`, handleMessageReceived); // Remove specific listener
+          socketRef.current.off(`message_received-${userId}`, handleMessageReceived); 
           socketRef.current.disconnect();
         }
         dispatch(clearMessages());
