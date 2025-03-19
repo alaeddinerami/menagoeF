@@ -1,15 +1,15 @@
 // slices/reservationsSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import apiClient from '../../api/axiosInstance'; 
+import apiClient from '../../api/axiosInstance';
 import { RootState } from '../store';
 
 interface Reservation {
   _id: string;
   cleaner: string;
-  client: string;
+  client: any;
   date: string;
   duration: number;
-  status: string;
+  status: 'pending' | 'accepted' | 'rejected';
   note?: string;
 }
 
@@ -25,6 +25,7 @@ const initialState: ReservationsState = {
   error: null,
 };
 
+// Fetch cleaner availability
 export const fetchAvailability = createAsyncThunk(
   'reservations/fetchAvailability',
   async (cleanerId: string, { getState, rejectWithValue }) => {
@@ -41,19 +42,53 @@ export const fetchAvailability = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      // console.log('response',response.data);
       
       return response.data;
     } catch (error: any) {
-        console.error('error',error);
+      console.error('Fetch availability error:', error);
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch availability');
     }
   }
 );
 
-export const createReservation = createAsyncThunk(
-  'reservations/createReservation',
-  async ({ cleanerId, date, duration, notes }: { cleanerId: string; date: string; duration: number; notes?: string }, { getState, rejectWithValue }) => {
+// Update reservation status (accept/reject)
+export const updateReservation = createAsyncThunk(
+  'reservations/updateReservation',
+  async (
+    { reservationId, status }: { reservationId: string; status: 'accepted' | 'rejected' },
+    { getState, rejectWithValue }
+  ) => {
+    try {
+      const state = getState() as RootState;
+      const token = state.auth.token;
+console.log('test resjecting',status);
+
+      if (!token) {
+        return rejectWithValue('User is not authenticated');
+      }
+
+      const response = await apiClient.patch(
+        `/reservations/${reservationId}`,
+        { status }, // Send status in request body
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Fixed typo: "Authorisation" -> "Authorization"
+          },
+        }
+      );
+
+      return response.data; // Return updated reservation
+    } catch (error: any) {
+      console.error('Update reservation error:', error);
+      return rejectWithValue(error.response?.data?.message || 'Failed to update reservation status');
+    }
+  }
+);
+
+// Fetch cleaner reservations
+export const fetchReservationsCleaner = createAsyncThunk(
+  'reservations/fetchReservationsCleaner',
+  async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState() as RootState;
       const token = state.auth.token;
@@ -62,18 +97,53 @@ export const createReservation = createAsyncThunk(
         return rejectWithValue('User is not authenticated');
       }
 
-      const response = await apiClient.post('/reservations', {
-        cleanerId,
-        date,
-        duration,
-        notes,
-      }, {
+      const response = await apiClient.get(`/reservations/cleaner`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
       return response.data;
     } catch (error: any) {
+      console.error('Fetch reservations error:', error);
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch cleaner reservations');
+    }
+  }
+);
+
+// Create new reservation
+export const createReservation = createAsyncThunk(
+  'reservations/createReservation',
+  async (
+    { cleanerId, date, duration, notes }: { cleanerId: string; date: string; duration: number; notes?: string },
+    { getState, rejectWithValue }
+  ) => {
+    try {
+      const state = getState() as RootState;
+      const token = state.auth.token;
+
+      if (!token) {
+        return rejectWithValue('User is not authenticated');
+      }
+
+      const response = await apiClient.post(
+        '/reservations',
+        {
+          cleanerId,
+          date,
+          duration,
+          notes,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Create reservation error:', error);
       return rejectWithValue(error.response?.data?.message || 'Failed to create reservation');
     }
   }
@@ -85,6 +155,7 @@ const reservationsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Fetch Availability
       .addCase(fetchAvailability.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -97,6 +168,22 @@ const reservationsSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
+      // Fetch Reservations Cleaner
+      .addCase(fetchReservationsCleaner.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchReservationsCleaner.fulfilled, (state, action) => {
+        state.loading = false;
+        state.reservations = action.payload;
+      })
+      .addCase(fetchReservationsCleaner.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Create Reservation
       .addCase(createReservation.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -106,6 +193,24 @@ const reservationsSlice = createSlice({
         state.reservations.push(action.payload);
       })
       .addCase(createReservation.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Update Reservation
+      .addCase(updateReservation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateReservation.fulfilled, (state, action) => {
+        state.loading = false;
+        const updatedReservation = action.payload;
+        const index = state.reservations.findIndex((r) => r._id === updatedReservation._id);
+        if (index !== -1) {
+          state.reservations[index] = updatedReservation; // Update the reservation in state
+        }
+      })
+      .addCase(updateReservation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
