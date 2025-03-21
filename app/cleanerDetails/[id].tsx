@@ -231,7 +231,7 @@ const sendCleaner = () => {
         <TouchableOpacity className="w-10 h-10 rounded-full bg-white/80 justify-center items-center shadow-md" onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="#6366F1" />
         </TouchableOpacity>
-        <Text className="text-lg font-semibold text-gray-800">Cleaner Profile {cleaner._id}</Text>
+        <Text className="text-lg font-semibold text-gray-800">Cleaner Profile </Text>
         <View className="flex-row">
           <TouchableOpacity className="w-10 h-10 rounded-full bg-white/80 justify-center items-center shadow-md"
           onPress={sendCleaner}>
@@ -255,18 +255,7 @@ const sendCleaner = () => {
             )}
             <View className="ml-4">
               <Text className="text-2xl font-bold text-white mb-1">{cleaner.name}</Text>
-              <View className="flex-row items-center">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Ionicons
-                    key={star}
-                    name={star <= 4 ? "star" : "star-outline"}
-                    size={16}
-                    color="#FFD700"
-                    className="mr-1"
-                  />
-                ))}
-                <Text className="text-white ml-1 font-semibold">4.0</Text>
-              </View>
+              <Text className=" text-white text-sm font-medium">cleaner</Text>
             </View>
           </LinearGradient>
 
