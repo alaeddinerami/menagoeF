@@ -16,7 +16,6 @@ import {
   Dimensions,
 } from "react-native"
 import { useDispatch, useSelector } from "react-redux"
-import { logout } from "~/redux/slices/authSlice"
 import { fetchCleaners } from "~/redux/slices/cleanersSlice"
 import type { AppDispatch, RootState } from "~/redux/store"
 import { Ionicons } from "@expo/vector-icons"
@@ -32,7 +31,6 @@ const CleanersScreen = () => {
   const { cleaners, loading, error } = useSelector((state: RootState) => state.cleaners)
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth)
 
-  // Local state
   const [refreshing, setRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeFilter, setActiveFilter] = useState<FilterOption>("all")
