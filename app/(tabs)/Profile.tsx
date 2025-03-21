@@ -1,30 +1,48 @@
-"use client"
-
 import { Stack, useRouter } from "expo-router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Text, View, Image, TouchableOpacity, Alert, Animated, StatusBar, TextInput } from "react-native"
 import { useDispatch, useSelector } from "react-redux"
 import CustomButton from "~/components/CustomButton"
 import { logout } from "~/redux/slices/authSlice"
+import { deleteReservation, fetchReservationsClient, updateReservation } from "~/redux/slices/reservationsSlice"
 import type { AppDispatch, RootState } from "~/redux/store"
 
+const formatDate = (dateString:any) => {
+  if (!dateString) return { date: 'N/A', time: 'N/A' };
+  
+  const date = new Date(dateString);
+  return {
+    date: date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    }),
+    time: date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  };
+}
 export default function Profile() {
   const { user } = useSelector((state: RootState) => state.auth)
+  const {reservations} = useSelector((state: RootState)=> state.reservations)
   const dispatch = useDispatch<AppDispatch>()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("reservations")
 
-  // Personal info state
-  const [name, setName] = useState(user?.user?.name || "Alex Johnson")
-  const [email, setEmail] = useState(user?.user?.email || "alex.johnson@example.com")
-  const [phone, setPhone] = useState("+1 (555) 123-4567")
-  const [address, setAddress] = useState("123 Main St, Apt 4B, New York, NY 10001")
+  const [name, setName] = useState(user?.user?.name )
+  const [email, setEmail] = useState(user?.user?.email )
+  const [phone, setPhone] = useState(user?.user?.phone||"0631713538")
+  const [address, setAddress] = useState(user?.user?.location || "18 rue smara massira safi")
   const [isEditing, setIsEditing] = useState(false)
-
   const handleLogout = () => {
     dispatch(logout())
     router.push("/(auth)/wapperAuth")
   }
+useEffect(()=>{
+  dispatch(fetchReservationsClient())
+},[dispatch,reservations.length])
 
   const handleImageUpdate = () => {
     Alert.alert("Update Profile Picture", "Choose an option", [
@@ -39,40 +57,16 @@ export default function Profile() {
     setIsEditing(false)
     Alert.alert("Success", "Your profile has been updated successfully!")
   }
+  const handleDeleteReservation = (reservationsId: string) => () => {
+    alert
+    dispatch(deleteReservation(reservationsId)).then(() => {
+      // Optionally re-fetch reservations after deletion
+      dispatch(fetchReservationsClient());
+    });
+  }
 
-  // Mock reservations data
-  const reservations = [
-    {
-      id: "1",
-      service: "Premium House Cleaning",
-      date: "May 15, 2023",
-      time: "10:00 AM - 12:00 PM",
-      status: "Upcoming",
-      address: "123 Main St, Apt 4B",
-      price: "$85.00",
-      cleaner: "Maria Johnson",
-    },
-    {
-      id: "2",
-      service: "Deep Cleaning",
-      date: "April 28, 2023",
-      time: "1:00 PM - 4:00 PM",
-      status: "Completed",
-      address: "123 Main St, Apt 4B",
-      price: "$150.00",
-      cleaner: "Robert Smith",
-    },
-    {
-      id: "3",
-      service: "Window Cleaning",
-      date: "March 15, 2023",
-      time: "9:00 AM - 11:00 AM",
-      status: "Completed",
-      address: "123 Main St, Apt 4B",
-      price: "$65.00",
-      cleaner: "Jennifer Davis",
-    },
-  ]
+
+console.log(reservations)
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -140,9 +134,11 @@ export default function Profile() {
           <View className="p-4">
             <Text className="text-lg font-bold text-gray-800 mb-4">Your Cleaning Services</Text>
 
-            {reservations.map((reservation) => (
-              <View key={reservation.id} className="bg-white rounded-lg shadow-sm mb-4 overflow-hidden">
-                <View className={`px-4 py-2 ${reservation.status === "Upcoming" ? "bg-blue-500" : "bg-green-500"}`}>
+            {reservations?.length > 0 ? (
+              reservations?.map((reservation) => (
+                
+              <View key={reservation._id} className="bg-white rounded-lg shadow-sm mb-4 overflow-hidden">
+                <View className={`px-4 py-2 ${reservation.status === "pending" ? "bg-blue-500" : "bg-green-500"}`}>
                   <View className="flex-row justify-between items-center">
                     <Text className="text-white font-medium">{reservation.status}</Text>
                     <Text className="text-white text-xs">{reservation.date}</Text>
@@ -150,33 +146,38 @@ export default function Profile() {
                 </View>
 
                 <View className="p-4">
-                  <Text className="text-lg font-bold text-gray-800">{reservation.service}</Text>
+                  <Text className="text-lg font-bold text-gray-800">{reservation?.cleaner?.name}</Text>
 
                   <View className="flex-row justify-between items-center mt-2">
-                    <Text className="text-gray-700">⏰ {reservation.time}</Text>
-                    <Text className="font-bold text-blue-500">{reservation.price}</Text>
+                    <Text className="text-gray-700"> {reservation.date}</Text>
+                    <Text className="font-bold text-blue-500">120 dh</Text>
                   </View>
 
-                    <Text className="text-gray-700 mt-2">📍 {reservation.address}</Text>
-                  <Text className="text-gray-700 mt-2">👤 {reservation.cleaner}</Text>
+                    <Text className="text-gray-700 mt-2"> {reservation?.cleaner?.location}</Text>
+                  <Text className="text-gray-700 mt-2"> {reservation?.cleaner?.name}</Text>
 
-                  {reservation.status === "Upcoming" && (
+                  {reservation.status === "pending" && (
                     <View className="flex-row mt-4">
                       <TouchableOpacity className="flex-1 mr-2">
                         <View className="border border-blue-500 rounded-lg py-3 items-center">
                           <Text className="text-blue-500 font-medium">Contact</Text>
                         </View>
                       </TouchableOpacity>
-                      <TouchableOpacity className="flex-1 ml-2">
+                      <TouchableOpacity
+                      onPress={handleDeleteReservation(reservation._id)}
+                      className="flex-1 ml-2">
                         <View className="bg-red-500 rounded-lg py-3 items-center">
                           <Text className="text-white font-medium">Cancel</Text>
                         </View>
                       </TouchableOpacity>
                     </View>
-                  )}
+                 )}
                 </View>
               </View>
-            ))}
+              ))
+            ) : (
+              <Text className="text-center text-gray-500 py-4">No reservations found</Text>
+            )}
           </View>
         ) : (
           <View className="p-4">
