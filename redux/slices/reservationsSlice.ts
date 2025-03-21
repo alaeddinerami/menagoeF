@@ -5,7 +5,7 @@ import { RootState } from '../store';
 
 interface Reservation {
   _id: string;
-  cleaner: string;
+  cleaner: any;
   client: any;
   date: string;
   duration: number;
@@ -110,6 +110,33 @@ export const fetchReservationsCleaner = createAsyncThunk(
     }
   }
 );
+// Fetch client reservations
+export const fetchReservationsClient = createAsyncThunk(
+  'reservations/fetchReservationsClient',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState;
+      const token = state.auth.token;
+
+      if (!token) {
+        return rejectWithValue('User is not authenticated');
+      }
+
+      const response = await apiClient.get(`/reservations/client `, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("clent reservation",response.data);
+      
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Fetch reservations error:', error);
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch cleaner reservations');
+    }
+  }
+);
 
 // Create new reservation
 export const createReservation = createAsyncThunk(
@@ -149,6 +176,21 @@ export const createReservation = createAsyncThunk(
   }
 );
 
+// delete reservation
+export const deleteReservation = createAsyncThunk("reservations/deleteReservation", 
+  async (reservationsId: string, {getState, rejectWithValue})=>{
+    try{
+      const state = getState() as RootState
+      const token = state.auth.token
+      if (!token){
+        return rejectWithValue('User is not authenticated')
+      }
+      const response = await apiClient.delete(`/reservations/${reservationsId}`)
+      return response.data
+    }catch(error: any){
+      console.error('Delete reservation error:', error);}
+  })
+
 const reservationsSlice = createSlice({
   name: 'reservations',
   initialState,
@@ -179,6 +221,19 @@ const reservationsSlice = createSlice({
         state.reservations = action.payload;
       })
       .addCase(fetchReservationsCleaner.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Fetch Reservations Client
+      .addCase(fetchReservationsClient.pending, (state) => {  
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchReservationsClient.fulfilled, (state, action) => {
+        state.loading = false;
+        state.reservations = action.payload;
+      })
+      .addCase(fetchReservationsClient.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
@@ -213,7 +268,25 @@ const reservationsSlice = createSlice({
       .addCase(updateReservation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      // Delete Reservation
+      .addCase(deleteReservation.pending, (state) =>{
+        state.loading = true;
+        state.error = null
+      })
+      .addCase(deleteReservation.fulfilled, (state, action)=>{
+        state.loading = false;
+        const deletedReservation = action.payload
+        const index = state.reservations.findIndex((r)=> r._id === deletedReservation._id)
+        if (index !== -1){
+          state.reservations.splice(index, 1)
+        } 
+      })
+      .addCase(deleteReservation.rejected, (state, action)=>{
+        state.loading = false
+        state.error = action.payload as string
       });
+
   },
 });
 
