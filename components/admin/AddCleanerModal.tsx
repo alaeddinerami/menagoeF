@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -8,162 +8,167 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-} from "react-native";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "~/redux/store"; // Adjust path
+  Image,
+} from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import * as ImagePicker from 'expo-image-picker';
+import { AppDispatch, RootState } from '~/redux/store';
+import { createCleaner } from '~/redux/slices/cleanersSlice';
 
 interface AddCleanerModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
-// Define the Cleaner type based on your schema
-interface Cleaner {
+interface FormData {
   name: string;
   email: string;
   password: string;
   location: string;
   phone: string;
-  image?: string;
-  service?: string; 
+  service?: string;
 }
 
-export const AddCleanerModal = ({ visible, onClose }: AddCleanerModalProps) => {
+export const AddCleanerModal: React.FC<AddCleanerModalProps> = ({ visible, onClose }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [location, setLocation] = useState("");
-  const [phone, setPhone] = useState("");
-  const [image, setImage] = useState("");
-  const [service, setService] = useState("");
+  const { loading, error } = useSelector((state: RootState) => state.cleaners);
+  
+  const [formData, setFormData] = useState<FormData>({
+    name: 'mohamed',
+    email: 'mohamed@gmail.com',
+    password: '12345678',
+    location: 'agadire',
+    phone: '0631713593',
+    service: 'deep cleaning',
+  });
+  const [image, setImage] = useState<string | null>(null);
 
-  const handleSubmit = () => {
-    if (!name || !email || !password || !location || !phone) {
-      alert("Please fill in all required fields.");
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Sorry, we need camera roll permissions to make this work!');
       return;
     }
 
-    const newCleaner: Cleaner = {
-      name,
-      email,
-      password,
-      location,
-      phone,
-      image: image || undefined,
-      service: service || undefined,
-    };
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
 
-    dispatch(addCleaner(newCleaner))
-      .unwrap()
-      .then(() => {
-        resetForm();
-        onClose();
-      })
-      .catch((error) => {
-        console.error("Failed to add cleaner:", error);
-        alert("Failed to add cleaner. Please try again.");
-      });
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handleSubmit = async () => {
+    const requiredFields: (keyof FormData)[] = ['name', 'email', 'password', 'location', 'phone'];
+    if (requiredFields.some(field => !formData[field])) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    const data = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value) data.append(key, value);
+    });
+
+    if (image) {
+      data.append('image', {
+        uri: image,
+        type: 'image/jpeg',
+        name: `cleaner_${Date.now()}.jpg`,
+      } as any);
+    }
+
+    try {
+      await dispatch(createCleaner(data)).unwrap();
+      resetForm();
+      onClose();
+    } catch (err) {
+      alert(error || 'Failed to add cleaner. Please try again.');
+    }
   };
 
   const resetForm = () => {
-    setName("");
-    setEmail("");
-    setPassword("");
-    setLocation("");
-    setPhone("");
-    setImage("");
-    setService("");
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      location: '',
+      phone: '',
+      service: '',
+    });
+    setImage(null);
   };
 
+  const inputFields = [
+    { key: 'name', placeholder: 'Name', autoCapitalize: 'words' as const },
+    { key: 'email', placeholder: 'Email', keyboardType: 'email-address' as const, autoCapitalize: 'none' as const },
+    { key: 'password', placeholder: 'Password', secureTextEntry: true, autoCapitalize: 'none' as const },
+    { key: 'location', placeholder: 'Location', autoCapitalize: 'words' as const },
+    { key: 'phone', placeholder: 'Phone', keyboardType: 'phone-pad' as const },
+    { key: 'service', placeholder: 'Service (optional)', autoCapitalize: 'sentences' as const },
+  ];
+
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.modalContainer}
       >
-        <View className="bg-white rounded-2xl p-6 w-11/12 max-w-md shadow-lg">
-          <Text className="text-2xl font-bold text-indigo-600 mb-4 text-center">
-            Add New Cleaner
-          </Text>
+        <View style={styles.modalContent}>
+          <Text style={styles.title}>Add New Cleaner</Text>
 
-          <TextInput
-            className="border border-gray-300 rounded-lg p-3 mb-4 text-gray-900"
-            placeholder="Name"
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-          />
+          {inputFields.map(({ key, ...props }) => (
+            <TextInput
+              key={key}
+              style={styles.input}
+              value={formData[key as keyof FormData]}
+              onChangeText={(text) => setFormData({ ...formData, [key]: text })}
+              editable={!loading}
+              {...props}
+            />
+          ))}
 
-          <TextInput
-            className="border border-gray-300 rounded-lg p-3 mb-4 text-gray-900"
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          <TouchableOpacity
+            style={styles.imageButton}
+            onPress={pickImage}
+            disabled={loading}
+          >
+            <Text style={styles.imageButtonText}>
+              {image ? 'Change Image' : 'Pick an Image'}
+            </Text>
+          </TouchableOpacity>
 
-          <TextInput
-            className="border border-gray-300 rounded-lg p-3 mb-4 text-gray-900"
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-          />
+          {image && (
+            <Image
+              source={{ uri: image }}
+              style={styles.previewImage}
+            />
+          )}
 
-          <TextInput
-            className="border border-gray-300 rounded-lg p-3 mb-4 text-gray-900"
-            placeholder="Location"
-            value={location}
-            onChangeText={setLocation}
-            autoCapitalize="words"
-          />
-
-          <TextInput
-            className="border border-gray-300 rounded-lg p-3 mb-4 text-gray-900"
-            placeholder="Phone"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-          />
-
-          <TextInput
-            className="border border-gray-300 rounded-lg p-3 mb-4 text-gray-900"
-            placeholder="Image URL (optional)"
-            value={image}
-            onChangeText={setImage}
-            autoCapitalize="none"
-          />
-
-          <TextInput
-            className="border border-gray-300 rounded-lg p-3 mb-6 text-gray-900"
-            placeholder="Service (optional)"
-            value={service}
-            onChangeText={setService}
-            autoCapitalize="sentences"
-          />
-
-          <View className="flex-row justify-between">
+          <View style={styles.buttonContainer}>
             <TouchableOpacity
-              className="bg-gray-300 rounded-lg py-3 px-6"
+              style={styles.cancelButton}
               onPress={onClose}
+              disabled={loading}
             >
-              <Text className="text-gray-800 font-semibold">Cancel</Text>
+              <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="bg-indigo-600 rounded-lg py-3 px-6"
+              style={[styles.submitButton, loading && styles.disabledButton]}
               onPress={handleSubmit}
+              disabled={loading}
             >
-              <Text className="text-white font-semibold">Add Cleaner</Text>
+              <Text style={styles.submitButtonText}>
+                {loading ? 'Adding...' : 'Add Cleaner'}
+              </Text>
             </TouchableOpacity>
           </View>
+
+          {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -173,8 +178,98 @@ export const AddCleanerModal = ({ visible, onClose }: AddCleanerModalProps) => {
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    width: '90%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4F46E5',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    fontSize: 16,
+    color: '#111827',
+  },
+  imageButton: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#F3F4F6',
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  imageButtonText: {
+    color: '#111827',
+    fontSize: 16,
+  },
+  previewImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 12,
+    alignSelf: 'center',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  cancelButton: {
+    backgroundColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    flex: 1,
+    marginRight: 8,
+    alignItems: 'center',
+  },
+  submitButton: {
+    backgroundColor: '#4F46E5',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    flex: 1,
+    alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#93C5FD',
+    opacity: 0.7,
+  },
+  buttonText: {
+    color: '#374151',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  errorText: {
+    color: '#EF4444',
+    marginTop: 8,
+    textAlign: 'center',
+    fontSize: 14,
   },
 });

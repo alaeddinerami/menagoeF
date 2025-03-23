@@ -14,7 +14,7 @@ export const CleanerCard = ({ cleaner }: { cleaner: Cleaner }) => {
     ? `${BASE_URL}/${cleaner.image}`
     : "https://avatar.iran.liara.run/public"; 
 
-  console.log('clenar image:', cleanerImage);
+//   console.log('clenar image:', cleanerImage);
 
   return (
     <TouchableOpacity className="bg-white rounded-2xl p-4 mb-4 shadow-md mx-4">

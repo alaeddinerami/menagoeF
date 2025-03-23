@@ -9,7 +9,7 @@ interface Cleaner {
   email: string;
   location: string;
   phone: string;
-  image: string | null;
+  image?: string | null;
   roles: string[];
 }
 
@@ -43,11 +43,42 @@ export const fetchCleaners = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log('cleaners',response.data);
+      // console.log('cleaners',response.data);
       
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch cleaners');
+    }
+  }
+);
+
+export const createCleaner = createAsyncThunk<
+  Cleaner,
+  FormData,
+  { state: RootState }
+>(
+  'cleaners/createCleaner',
+  async (formData, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState;//
+      const token = state.auth.token
+      if (!token) {
+        return rejectWithValue('Authentication required');
+      }
+
+      const response = await apiClient.post('/user', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      // console.log(response.data);
+      
+      return response.data as Cleaner;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to create cleaner'
+      );
     }
   }
 );
@@ -67,6 +98,19 @@ const cleanersSlice = createSlice({
         state.cleaners = action.payload;
       })
       .addCase(fetchCleaners.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      //create cleaner
+      .addCase(createCleaner.pending, (state)=>{
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createCleaner.fulfilled, (state, action)=>{
+        state.loading = false;
+        state.cleaners.push(action.payload);
+      })
+      .addCase(createCleaner.rejected, (state, action)=>{
         state.loading = false;
         state.error = action.payload as string;
       });
