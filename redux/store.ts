@@ -34,6 +34,7 @@ const store = configureStore({
     reservations: reservationsReducer,
     chat: chatReducer,
     chatList: chatListReducer,
+    
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

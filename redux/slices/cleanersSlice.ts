@@ -43,6 +43,8 @@ export const fetchCleaners = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log('cleaners',response.data);
+      
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch cleaners');

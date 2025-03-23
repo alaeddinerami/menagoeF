@@ -23,9 +23,11 @@ const userRole = user?.user?.roles[0] || 'client';
       return <Redirect href="/(cleaners)" />;
     } else if (userRole === "client") {
       return <Redirect href="/(tabs)" />;
+    } else if (userRole === "admin") {
+      return <Redirect href="/(admin)" />;
     } else {
       console.log("Unknown role, defaulting to (tabs)");
-      return <Redirect href="/(tabs)" />;
+      return <Redirect href="/" />;
     }
   }
 

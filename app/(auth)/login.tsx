@@ -36,6 +36,10 @@ export default function LoginScreen() {
             console.log("ana ghadi l chat")
             router.replace("/(cleaners)")
             break
+          case UserRole.ADMIN:
+            console.log("ana ghadi l admin")
+            router.replace("/(admin)")
+            break
           default:
             console.log(`Unknown role: ${primaryRole}`)
             router.replace("/(tabs)")
