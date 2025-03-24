@@ -51,7 +51,7 @@ export default function TabLayout() {
       }}
       screenListeners={({ route }) => ({
         focus: () => {
-          const index = ["index", "chatItem", "profile"].indexOf(route.name)
+          const index = ["index", "profile"].indexOf(route.name)
           if (index !== -1) {
             animateTab(index)
           }
@@ -109,9 +109,8 @@ export default function TabLayout() {
           ),
         }}
       />
-     
       <Tabs.Screen
-        name="Profile"
+        name="profile"
         options={{
           title: "Profile",
           tabBarIcon: ({ color, focused }) => (
@@ -151,14 +150,14 @@ export default function TabLayout() {
                 }}
               >
                
-               <Entypo name="user" size={24} color={color} />
+              <Entypo name="user" size={24} color={color} />
+
 
               </Animated.View>
             </View>
           ),
         }}
       />
-
     </Tabs>
   )
 }

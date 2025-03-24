@@ -119,7 +119,7 @@ export default function Profile() {
       <StatusBar barStyle="light-content" />
       <Stack.Screen
         options={{
-          title: "My Profile",
+          title: "Profile",
           headerStyle: {
             backgroundColor: "#6366F1",
           },
@@ -174,29 +174,7 @@ export default function Profile() {
             {renderField("Location", address, setAddress, <MapPin size={16} color="#6366F1" />, "default", true)}
           </View>
 
-          <View className="bg-white rounded-2xl shadow-sm mb-6 overflow-hidden">
-            <TouchableOpacity className="p-4 flex-row justify-between items-center">
-              <View className="flex-row items-center">
-                <View className="w-8 h-8 rounded-full bg-purple-100 items-center justify-center">
-                  <User size={16} color="#8b5cf6" />
-                </View>
-                <Text className="ml-3 text-gray-800 font-medium">Account Settings</Text>
-              </View>
-              <ChevronRight size={18} color="#6366F1" />
-            </TouchableOpacity>
-            
-            <View className="h-px bg-gray-100" />
-            
-            <TouchableOpacity className="p-4 flex-row justify-between items-center">
-              <View className="flex-row items-center">
-                <View className="w-8 h-8 rounded-full bg-blue-100 items-center justify-center">
-                  <Edit2 size={16} color="#6366F1" />
-                </View>
-                <Text className="ml-3 text-gray-800 font-medium">Privacy & Security</Text>
-              </View>
-              <ChevronRight size={18} color="#6366F1" />
-            </TouchableOpacity>
-          </View>
+          
         </View>
 
         <View className="px-4 mb-10">

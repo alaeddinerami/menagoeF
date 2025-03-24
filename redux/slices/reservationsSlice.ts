@@ -61,7 +61,7 @@ export const updateReservation = createAsyncThunk(
     try {
       const state = getState() as RootState;
       const token = state.auth.token;
-console.log('test resjecting',status);
+// console.log('test resjecting',status);
 
       if (!token) {
         return rejectWithValue('User is not authenticated');
@@ -69,15 +69,15 @@ console.log('test resjecting',status);
 
       const response = await apiClient.patch(
         `/reservations/${reservationId}`,
-        { status }, // Send status in request body
+        { status }, 
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Fixed typo: "Authorisation" -> "Authorization"
+            Authorization: `Bearer ${token}`, 
           },
         }
       );
 
-      return response.data; // Return updated reservation
+      return response.data;
     } catch (error: any) {
       console.error('Update reservation error:', error);
       return rejectWithValue(error.response?.data?.message || 'Failed to update reservation status');
@@ -262,7 +262,7 @@ const reservationsSlice = createSlice({
         const updatedReservation = action.payload;
         const index = state.reservations.findIndex((r) => r._id === updatedReservation._id);
         if (index !== -1) {
-          state.reservations[index] = updatedReservation; // Update the reservation in state
+          state.reservations[index] = updatedReservation; 
         }
       })
       .addCase(updateReservation.rejected, (state, action) => {

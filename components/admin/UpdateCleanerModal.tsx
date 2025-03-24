@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -13,34 +13,48 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import { AppDispatch, RootState } from '~/redux/store';
-import { createCleaner } from '~/redux/slices/cleanersSlice';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { updateCleaner, Cleaner } from '~/redux/slices/cleanersSlice';
+import { AntDesign } from '@expo/vector-icons';
 
-interface AddCleanerModalProps {
+interface UpdateCleanerModalProps {
   visible: boolean;
   onClose: () => void;
+  cleaner: Cleaner;
 }
 
 interface FormData {
   name: string;
   email: string;
-  password: string;
   location: string;
   phone: string;
+  service?: string;
 }
 
-export const AddCleanerModal: React.FC<AddCleanerModalProps> = ({ visible, onClose }) => {
+export const UpdateCleanerModal: React.FC<UpdateCleanerModalProps> = ({ visible, onClose, cleaner }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((state: RootState) => state.cleaners);
+  const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
   const [formData, setFormData] = useState<FormData>({
-    name: 'mohamed',
-    email: 'mohamed@gmail.com',
-    password: '12345678',
-    location: 'agadire',
-    phone: '0631713593',
+    name: '',
+    email: '',
+    location: '',
+    phone: '',
+    service: '',
   });
   const [image, setImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (visible && cleaner) {
+      setFormData({
+        name: cleaner.name,
+        email: cleaner.email,
+        location: cleaner.location,
+        phone: cleaner.phone,
+      });
+      setImage(cleaner.image ? `${BASE_URL}/${cleaner.image}` : null);
+    }
+  }, [visible, cleaner, BASE_URL]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -62,59 +76,43 @@ export const AddCleanerModal: React.FC<AddCleanerModalProps> = ({ visible, onClo
   };
 
   const handleSubmit = async () => {
-    const requiredFields: (keyof FormData)[] = ['name', 'email', 'password', 'location', 'phone'];
-    if (requiredFields.some((field) => !formData[field])) {
+    const requiredFields: (keyof FormData)[] = ['name', 'location', 'phone'];
+    if (requiredFields.some(field => !formData[field])) {
       alert('Please fill in all required fields.');
       return;
     }
 
     const data = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
-      if (value) data.append(key, value);
-    });
+    if (formData.name !== cleaner.name) data.append('name', formData.name);
+    if (formData.email !== cleaner.email) data.append('email', formData.email);
+    if (formData.location !== cleaner.location) data.append('location', formData.location);
+    if (formData.phone !== cleaner.phone) data.append('phone', formData.phone);
 
-    if (image) {
+    if (image && !image.startsWith(BASE_URL || '')) {
       data.append('image', {
         uri: image,
         type: 'image/jpeg',
         name: `cleaner_${Date.now()}.jpg`,
       } as any);
     }
+console.log(data);
 
     try {
-      await dispatch(createCleaner(data)).unwrap();
-      resetForm();
-      onClose();
-    } catch (err) {
-      alert(error || 'Failed to add cleaner. Please try again.');
-    }
-  };
+      await dispatch(updateCleaner({
+        id: cleaner._id,
+        formData: data
+        
+      })).unwrap();
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      location: '',
-      phone: '',
-    });
-    setImage(null);
+      onClose(); 
+    } catch (err) {
+      alert(error || 'Failed to update cleaner. Please try again.');
+    }
   };
 
   const inputFields = [
     { key: 'name', placeholder: 'Name', autoCapitalize: 'words' as const },
-    {
-      key: 'email',
-      placeholder: 'Email',
-      keyboardType: 'email-address' as const,
-      autoCapitalize: 'none' as const,
-    },
-    {
-      key: 'password',
-      placeholder: 'Password',
-      secureTextEntry: true,
-      autoCapitalize: 'none' as const,
-    },
+    { key: 'email', placeholder: 'Email', autoCapitalize: 'none' as const, keyboardType: 'email-address' as const },
     { key: 'location', placeholder: 'Location', autoCapitalize: 'words' as const },
     { key: 'phone', placeholder: 'Phone', keyboardType: 'phone-pad' as const },
   ];
@@ -123,9 +121,10 @@ export const AddCleanerModal: React.FC<AddCleanerModalProps> = ({ visible, onClo
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.modalContainer}>
+        style={styles.modalContainer}
+      >
         <View style={styles.modalContent}>
-          <Text style={styles.title}>Add New Cleaner</Text>
+          <Text style={styles.title}>Update Cleaner</Text>
 
           {inputFields.map(({ key, ...props }) => (
             <TextInput
@@ -138,23 +137,42 @@ export const AddCleanerModal: React.FC<AddCleanerModalProps> = ({ visible, onClo
             />
           ))}
 
-          <TouchableOpacity style={styles.imageButton} onPress={pickImage} disabled={loading}>
-            <Text style={styles.imageButtonText}>{image ? 'Change Image' : 'Pick an Image'}</Text>
+          <TouchableOpacity
+            style={styles.imageButton}
+            onPress={pickImage}
+            disabled={loading}
+          >
+            <Text style={styles.imageButtonText}>
+              {image ? 'Change Image' : 'Update Image'}
+            </Text>
           </TouchableOpacity>
 
-          {image && <Image source={{ uri: image }} style={styles.previewImage} />}
+          {image && (
+            <Image
+              source={{ uri: image }}
+              style={styles.previewImage}
+            />
+          )}
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={[styles.cancelButton,]} onPress={onClose} disabled={loading}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={onClose}
+              disabled={loading}
+            >
               <Text style={styles.buttonText}>Cancel</Text>
-              <MaterialIcons name="cancel" size={24} color="black" />
+              <AntDesign name="closecircle" size={24} color="black" />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.submitButton, loading && styles.disabledButton]}
               onPress={handleSubmit}
-              disabled={loading}>
-              <Text style={styles.submitButtonText}>{loading ? 'Adding...' : 'Add Cleaner'}</Text>
+              disabled={loading}
+            >
+              <Text style={styles.submitButtonText}>
+                {loading ? 'Updating...' : 'Update '}
+              </Text>
               <AntDesign name="checkcircle" size={24} color="black" />
+
             </TouchableOpacity>
           </View>
 
@@ -232,7 +250,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
     marginRight: 8,
-    gap: 4,
+    gap: 6,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row-reverse',
@@ -247,7 +265,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row-reverse',
-   
   },
   disabledButton: {
     backgroundColor: '#93C5FD',
@@ -256,12 +273,12 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#374151',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 16,
   },
   submitButtonText: {
     color: 'white',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 16,
   },
   errorText: {
     color: '#EF4444',

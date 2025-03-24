@@ -22,7 +22,6 @@ import { Ionicons } from "@expo/vector-icons"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { LinearGradient } from "expo-linear-gradient"
 
-type FilterOption = "all" | "available" | "unavailable"
 
 const { width } = Dimensions.get("window")
 
@@ -33,10 +32,9 @@ const CleanersScreen = () => {
 
   const [refreshing, setRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [activeFilter, setActiveFilter] = useState<FilterOption>("all")
+  const [selectedLocation, setSelectedLocation] = useState<string |null>(null)
 
   const getAvailability = (id: string) => {
-    // This is just for demo - in a real app, you'd get this from your API
     return id.charCodeAt(0) % 2 === 0
   }
 
@@ -60,7 +58,10 @@ const CleanersScreen = () => {
     router.push("/chatScreen/ChatItem")
   }
 
- 
+ const getLocations = () => {
+    const locations = cleaners.map((cleaner) => cleaner.location)
+    return ['all', ...Array.from(new Set(locations))]
+ }
 
   const filterCleaners = () => {
     let filteredList = [...cleaners]
@@ -73,11 +74,8 @@ const CleanersScreen = () => {
       )
     }
 
-    if (activeFilter !== "all") {
-      filteredList = filteredList.filter((cleaner) => {
-        const isAvailable = getAvailability(cleaner._id)
-        return activeFilter === "available" ? isAvailable : !isAvailable
-      })
+    if (selectedLocation  && selectedLocation!== "all") {
+      filteredList = filteredList.filter((cleaner) => cleaner.location === selectedLocation.toLowerCase())
     }
 
     return filteredList
@@ -130,32 +128,20 @@ const CleanersScreen = () => {
         <View style={styles.filterContainer}>
           <Text style={styles.filterLabel}>Filter by:</Text>
           <View style={styles.filterOptions}>
-            <TouchableOpacity
-              style={[styles.filterOption, activeFilter === "all" && styles.activeFilterOption]}
-              onPress={() => setActiveFilter("all")}
-            >
-              <Text style={[styles.filterOptionText, activeFilter === "all" && styles.activeFilterOptionText]}>
-                All
-              </Text>
-            </TouchableOpacity>
+            {getLocations().map((location:string) => (
 
-            <TouchableOpacity
-              style={[styles.filterOption, activeFilter === "available" && styles.activeFilterOption]}
-              onPress={() => setActiveFilter("available")}
-            >
-              <Text style={[styles.filterOptionText, activeFilter === "available" && styles.activeFilterOptionText]}>
-                Available
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                key={location}
+                style={[styles.filterOption, selectedLocation === location.toLowerCase() && styles.activeFilterOption]}
+                onPress={() => setSelectedLocation(location.toLowerCase() as FilterOption)}
+              >
+                <Text style={[styles.filterOptionText, selectedLocation === location.toLowerCase() && styles.activeFilterOptionText]}>
+                  {location}
+                </Text>
+              </TouchableOpacity>
+            ))}
 
-            <TouchableOpacity
-              style={[styles.filterOption, activeFilter === "unavailable" && styles.activeFilterOption]}
-              onPress={() => setActiveFilter("unavailable")}
-            >
-              <Text style={[styles.filterOptionText, activeFilter === "unavailable" && styles.activeFilterOptionText]}>
-                Unavailable
-              </Text>
-            </TouchableOpacity>
+           
           </View>
         </View>
 
@@ -331,6 +317,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   listContainer: {
+    paddingBottom: 80,
     padding: 20,
     paddingTop: 8,
   },
