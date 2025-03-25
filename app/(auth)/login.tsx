@@ -13,8 +13,8 @@ enum UserRole {
 }
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("cleaner@gmail.com")
-  const [password, setPassword] = useState("12345678")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const dispatch = useDispatch<AppDispatch>()
   const { loading, error, user } = useSelector((state: RootState) => state.auth)
   const router = useRouter()

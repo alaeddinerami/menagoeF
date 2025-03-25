@@ -34,11 +34,11 @@ export const AddCleanerModal: React.FC<AddCleanerModalProps> = ({ visible, onClo
   const { loading, error } = useSelector((state: RootState) => state.cleaners);
 
   const [formData, setFormData] = useState<FormData>({
-    name: 'mohamed',
-    email: 'mohamed@gmail.com',
-    password: '12345678',
-    location: 'agadire',
-    phone: '0631713593',
+    name: '',
+    email: '',
+    password: '',
+    location: '',
+    phone: '',
   });
   const [image, setImage] = useState<string | null>(null);
 
@@ -83,23 +83,13 @@ export const AddCleanerModal: React.FC<AddCleanerModalProps> = ({ visible, onClo
 
     try {
       await dispatch(createCleaner(data)).unwrap();
-      resetForm();
       onClose();
     } catch (err) {
       alert(error || 'Failed to add cleaner. Please try again.');
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      location: '',
-      phone: '',
-    });
-    setImage(null);
-  };
+  
 
   const inputFields = [
     { key: 'name', placeholder: 'Name', autoCapitalize: 'words' as const },

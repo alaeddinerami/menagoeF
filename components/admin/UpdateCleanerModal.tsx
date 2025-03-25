@@ -13,13 +13,13 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import { AppDispatch, RootState } from '~/redux/store';
-import { updateCleaner, Cleaner } from '~/redux/slices/cleanersSlice';
+import { updateCleaner } from '~/redux/slices/cleanersSlice';
 import { AntDesign } from '@expo/vector-icons';
 
 interface UpdateCleanerModalProps {
   visible: boolean;
   onClose: () => void;
-  cleaner: Cleaner;
+  cleaner: any;
 }
 
 interface FormData {

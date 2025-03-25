@@ -1,5 +1,5 @@
 import { AntDesign } from '@expo/vector-icons';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Text, TouchableOpacity, View } from 'react-native';
 import { UpdateCleanerModal } from './UpdateCleanerModal';
 import { useState } from 'react';
 import { AppDispatch, RootState } from '~/redux/store';
@@ -27,9 +27,21 @@ export const CleanerCard = ({ cleaner }: { cleaner: any }) => {
   const { loading, error } = useSelector((state: RootState) => state.cleaners);
 
   const handelDeleteCleaner = (id:string) => {
-    dispatch(deleteCleaner(id)).then(()=>{
-      dispatch(fetchCleaners())
-    });
+    Alert.alert('Delete Cleaner', 'Are you sure you want to delete this cleaner?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      { text: 'OK', onPress: () =>   dispatch(deleteCleaner(id)).then(()=>{
+        dispatch(fetchCleaners())
+      })
+    .catch((err) => {
+      Alert.alert('Delete Cleaner Failed')
+
+      console.error('Error deleting cleaner:', error);
+    }) },
+    ]);
+  
   }
 
   return (

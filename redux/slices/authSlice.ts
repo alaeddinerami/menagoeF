@@ -17,7 +17,7 @@ interface User {
 }
 
 interface AuthState {
-  user: User | null;
+  user: any | null;
   loading: boolean;
   error: string | null;
   token: string | null;
