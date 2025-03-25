@@ -18,24 +18,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '~/redux/store';
 import { fetchReservationsCleaner, updateReservation } from '~/redux/slices/reservationsSlice';
+import { router } from 'expo-router';
 
-// Types
 type Reservation = {
   _id: string;
   cleaner: string;
-  client: { _id: string; name: string; image?: string };
+  client: { _id: string; name: string; image?: string;location: string;   phone?: string;
+  };
   date: string;
   Duration: number;
   status: 'pending' | 'accepted' | 'rejected';
   note?: string;
-  address: string;
-  phone?: string;
-  serviceType?: string;
 };
 
 type Tab = 'pending' | 'accepted' | 'rejected';
 
-// Constants
 const TABS: Tab[] = ['pending', 'accepted', 'rejected'];
 const STATUS_CONFIG = {
   pending: { bg: 'bg-indigo-100', text: 'text-indigo-700', icon: 'time', iconColor: '#4f46e5' },
@@ -43,25 +40,17 @@ const STATUS_CONFIG = {
   rejected: { bg: 'bg-rose-100', text: 'text-rose-700', icon: 'close-circle', iconColor: '#dc2626' },
 } as const;
 
-// Utility Functions
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-const formatTimeRange = (date: string, duration: number) => {
+const formatTimeRange = (date: string) => {
   const start = new Date(date);
-  const end = new Date(start.getTime() + duration * 60000);
-  return `${start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+  return `${start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} `
 };
 
-const formatDuration = (minutes: number) => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-};
 
 const getDateKey = (date: string) => new Date(date).toISOString().split('T')[0];
 
-// Components
 const ReservationCard = memo(
   ({
     item,
@@ -75,7 +64,7 @@ const ReservationCard = memo(
     const dispatch = useDispatch<AppDispatch>();
     const isExpanded = expandedId === item._id;
     const status = STATUS_CONFIG[item.status];
-    const BASE_URL = process.env.EXPO_PUBLIC_API_URL || '';
+    const BASE_URL = process.env.EXPO_PUBLIC_API_URL ;
     const imageclient = item.client.image;
     const imageUrl = imageclient ? `${BASE_URL}/${imageclient}` : 'https://avatar.iran.liara.run/public';
 
@@ -86,6 +75,10 @@ const ReservationCard = memo(
     const handleReject = () => {
       dispatch(updateReservation({ reservationId: item._id, status: 'rejected' }));
     };
+    const sendClient = () => {
+      const cleanerData = encodeURIComponent(JSON.stringify(item.client));
+      router.push(`/chatScreen/chat?cleaner=${cleanerData}`);
+    }
 
     return (
       <TouchableOpacity
@@ -102,7 +95,6 @@ const ReservationCard = memo(
               />
               <View className="flex-1">
                 <Text className="text-lg font-semibold text-gray-900">{item.client.name}</Text>
-                <Text className="text-sm text-gray-600">{item.serviceType || 'Cleaning'}</Text>
               </View>
             </View>
             <View
@@ -116,9 +108,8 @@ const ReservationCard = memo(
           <View className="mt-4 space-y-2">
             {[
               { icon: 'calendar', text: formatDate(item.date) },
-              { icon: 'clock', text: formatTimeRange(item.date, item.Duration), lib: MaterialCommunityIcons },
-              { icon: 'hourglass', text: formatDuration(item.Duration) },
-              ...(item.address ? [{ icon: 'location', text: item.address }] : []),
+              { icon: 'clock', text: formatTimeRange(item.date), lib: MaterialCommunityIcons },
+              ...(item.client.location ? [{ icon: 'location', text: item.client.location }] : []),
             ].map(({ icon, text, lib: IconLib = Ionicons }, index) => (
               <View key={index} className="flex-row items-center">
                 <IconLib name={icon} size={16} color="#6b7280" />
@@ -131,57 +122,36 @@ const ReservationCard = memo(
 
           {isExpanded && (
             <View className="mt-5 border-t border-gray-200/50 pt-4">
-              {item.note && (
-                <View className="mb-4">
-                  <Text className="text-base font-medium text-gray-800">Note</Text>
-                  <Text className="mt-2 text-base text-gray-600">{item.note}</Text>
-                </View>
-              )}
-              <View className="flex-row flex-wrap gap-3">
-                {item.phone && (
-                  <TouchableOpacity
-                    className="min-w-[120px] flex-1 flex-row items-center justify-center rounded-lg bg-indigo-600 px-4 py-3 shadow-sm"
-                    onPress={() => Linking.openURL(`tel:${item.phone}`)}
-                  >
-                    <Ionicons name="call" size={18} color="white" />
-                    <Text className="ml-2 text-base font-medium text-white">Call</Text>
-                  </TouchableOpacity>
-                )}
-                {item.address && (
-                  <TouchableOpacity
-                    className="min-w-[120px] flex-1 flex-row items-center justify-center rounded-lg bg-indigo-600 px-4 py-3 shadow-sm"
-                    onPress={() => {
-                      const url = Platform.select({
-                        ios: `maps:0,0?q=${encodeURIComponent(item.address)}`,
-                        android: `geo:0,0?q=${encodeURIComponent(item.address)}`,
-                      });
-                      url && Linking.openURL(url);
-                    }}
-                  >
-                    <Ionicons name="navigate" size={18} color="white" />
-                    <Text className="ml-2 text-base font-medium text-white">Directions</Text>
-                  </TouchableOpacity>
-                )}
-                {item.status === 'pending' && (
+            <View className="flex-row flex-wrap gap-3">
+              <TouchableOpacity
+                className="min-w-28 flex justify-center items-center rounded-full bg-indigo-600 px-4 py-3 shadow-sm"
+                onPress={sendClient}
+              >
+                <Ionicons name="chatbubble-ellipses" size={18} color="white" />
+              </TouchableOpacity>
+              {item.status === 'pending' && (
                   <>
-                    <TouchableOpacity
-                      className="min-w-[120px] flex-1 flex-row items-center justify-center rounded-lg bg-emerald-600 px-4 py-3 shadow-sm"
-                      onPress={handleAccept}
-                    >
-                      <Ionicons name="checkmark" size={18} color="white" />
-                      <Text className="ml-2 text-base font-medium text-white">Accept</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      className="min-w-[120px] flex-1 flex-row items-center justify-center rounded-lg bg-rose-600 px-4 py-3 shadow-sm"
-                      onPress={handleReject}
-                    >
-                      <Ionicons name="close" size={18} color="white" />
-                      <Text className="ml-2 text-base font-medium text-white">Reject</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
+          
+                  <TouchableOpacity
+                    className="min-w-[100px] flex rounded-full bg-emerald-500 px-5 py-3 shadow-md border border-emerald-700"
+                    onPress={handleAccept}
+                  >
+                    <Text className="text-center text-base font-medium text-white">
+                      Accept
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="min-w-[100px] flex-1 rounded-full bg-red-500 px-5 py-3 shadow-md border border-red-800"
+                    onPress={handleReject}
+                  >
+                    <Text className="text-center text-base font-medium text-white">
+                      Reject
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
+          </View>
           )}
         </View>
       </TouchableOpacity>
@@ -245,7 +215,7 @@ export default function ReservationsScreen() {
           (!query ||
             r.client.name.toLowerCase().includes(query) ||
             r._id.toLowerCase().includes(query) ||
-            r.address?.toLowerCase().includes(query))
+            r.client.location?.toLowerCase().includes(query))
       )
       .reduce(
         (acc, r) => {
@@ -271,7 +241,7 @@ export default function ReservationsScreen() {
             <Ionicons name="search" size={18} color="white" />
             <TextInput
               className="mx-3 flex-1 text-sm text-white placeholder:text-indigo-200"
-              placeholder="Search by name, address, or service..."
+              placeholder="Search by name, location, or service..."
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
