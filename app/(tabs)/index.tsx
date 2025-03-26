@@ -77,7 +77,7 @@ const CleanersScreen = () => {
     if (selectedLocation  && selectedLocation!== "all") {
       filteredList = filteredList.filter((cleaner) => cleaner.location === selectedLocation.toLowerCase())
     }
-
+    
     return filteredList
   }
 
